@@ -1,0 +1,3 @@
+# Raíz: CI (pytest). Proyectos tienen su propio requirements.txt.
+pytest>=7.0
+pandas>=2.0

@@ -1,0 +1,19 @@
+[project]
+name = "ia-indata-agency"
+version = "0.1.0"
+description = "Template agencia de datos IA — retail SIMIR"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["projects/retail-prueba/tests"]
+pythonpath = ["projects/retail-prueba"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = [".git", ".github", "data", "*.sql", "*.csv"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = false
