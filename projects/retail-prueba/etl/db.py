@@ -1,4 +1,9 @@
 """Conexión a Neon (PostgreSQL) para ETL."""
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 import sqlalchemy
 from etl.config import DATABASE_URL
 
