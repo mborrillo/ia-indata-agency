@@ -1,41 +1,35 @@
 """
-SIMIR — App Streamlit para el gerente de tienda.
-C1–C5: Resumen (KPI cards) → Comparativa (gráficos) → Detalle (tablas) + Reporte ejecutivo.
+SIMIR – App Streamlit para el gerente de tienda.
+Resumen (KPI cards) → Comparativa (gráficos) → Detalle (tablas) → Reporte ejecutivo.
 Solo lectura desde vistas Gold. DATABASE_URL o NEON_DATABASE_URL en entorno.
 """
-import os
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-
-from dotenv import load_dotenv
-import os
 
 import logging
 from dotenv import load_dotenv
 import os
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import sqlalchemy
 
-# Cargar variables de entorno (ya lo tenías del Punto 1)
+# Cargar variables de entorno
 load_dotenv()
 
 # Configuración global de logging
 logging.basicConfig(
-    level=logging.INFO,                         # INFO = mensajes normales, WARNING = advertencias, ERROR = fallos
+    level=logging.INFO,
     format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
-        logging.StreamHandler(),                # Muestra en consola / terminal
-        # Opcional: guardar también en archivo (descomenta si quieres)
-        # logging.FileHandler("app.log", mode='a')
+        logging.StreamHandler(),
+        # logging.FileHandler("app.log", mode='a')  # descomenta si quieres archivo
     ]
 )
-
-# Logger específico para este archivo (mejor trazabilidad)
 logger = logging.getLogger(__name__)
 
-# ------------------- Ejemplos de uso en el código existente -------------------
+logger.info("Aplicación Streamlit SIMIR iniciada")
 
-# Donde verificas la conexión a la DB (reemplaza o agrega)
+# Variables de entorno para la conexión a la base de datos
 DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
@@ -47,128 +41,73 @@ else:
     st.success("Conexión a base de datos configurada correctamente.")
     USE_DB = True
 
-# En la función que lee datos (ej. read_gold o similar)
+# Función para obtener el engine (con logging)
+def get_engine():
+    try:
+        engine = sqlalchemy.create_engine(DATABASE_URL)
+        logger.info("Engine de SQLAlchemy creado correctamente")
+        return engine
+    except Exception as e:
+        logger.error(f"Error al crear engine de conexión: {str(e)}", exc_info=True)
+        raise
+
+# Función para leer vistas Gold (con cache y logging)
+@st.cache_data(ttl=3600)  # 1 hora de cache
 def read_gold(view: str) -> pd.DataFrame:
     if not USE_DB:
         logger.info(f"Modo demo: devolviendo DataFrame vacío para vista {view}")
         return pd.DataFrame()
     
     try:
-        engine = get_engine()  # tu función de conexión
+        engine = get_engine()
         query = f'SELECT * FROM retail_gold.{view}'
         df = pd.read_sql(query, engine)
         logger.info(f"Consulta exitosa → {len(df)} filas cargadas desde {view}")
         return df
     except Exception as e:
-        logger.error(f"Error al leer vista {view}: {str(e)}", exc_info=True)  # exc_info=True muestra traceback
+        logger.error(f"Error al leer vista {view}: {str(e)}", exc_info=True)
         st.error(f"Error al conectar/leer la base de datos: {str(e)}")
         return pd.DataFrame()
 
-# En cualquier otro punto importante, por ejemplo al cargar la app
-logger.info("Aplicación Streamlit SIMIR iniciada")
+# Título y configuración de página
+st.set_page_config(page_title="SIMIR - Sistema de Inteligencia Mercados Retail", layout="wide")
+st.title("SIMIR – Sistema de Inteligencia Mercados Retail")
 
-# Cargar variables de entorno desde .env si existe
-load_dotenv()  # Busca .env en la carpeta actual o superiores
+# Cargar datos
+rotacion_df = read_gold("v_rotacion_inventario")
+alertas_df = read_gold("v_alertas_stock")
+oportunidad_df = read_gold("v_oportunidad_venta")
 
-try:
-    import sqlalchemy
-except ImportError:
-    st.error("Instalar: pip install sqlalchemy psycopg2-binary")
-    st.stop()
+# Pestañas
+tab1, tab2, tab3, tab4 = st.tabs(["Resumen", "Comparativa", "Detalle", "Reporte Ejecutivo"])
 
-# Variables de entorno para la conexión a la base de datos
-DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+with tab1:
+    st.subheader("Resumen KPIs")
+    if USE_DB and not rotacion_df.empty:
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Rotación Promedio", f"{rotacion_df['rotacion'].mean():.2f}")
+        col2.metric("Stock Crítico", len(alertas_df))
+        col3.metric("Oportunidades Detectadas", len(oportunidad_df))
+    else:
+        st.info("Datos de ejemplo no disponibles en modo demo.")
 
-# Verificación de la URL de la base de datos
-if not DATABASE_URL:
-    st.warning("No se encontró NEON_DATABASE_URL ni DATABASE_URL en variables de entorno ni en .env.")
-    st.info("Usando datos de ejemplo estáticos para demo.")
-    USE_DB = False
-else:
-    USE_DB = True
-    st.success("Conexión a base de datos configurada correctamente.")
+with tab2:
+    st.subheader("Comparativa Gráfica")
+    if not rotacion_df.empty:
+        fig = px.line(rotacion_df, x='fecha', y='rotacion', color='producto', title="Rotación por Producto")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No hay datos para mostrar en modo demo.")
 
-st.set_page_config(page_title="SIMIR — Inventarios Retail", layout="wide")
-st.title("SIMIR — Sistema de Inteligencia para Gestión de Inventarios Retail")
+with tab3:
+    st.subheader("Detalle por Vista")
+    vista = st.selectbox("Seleccionar vista Gold", ["v_rotacion_inventario", "v_alertas_stock", "v_oportunidad_venta"])
+    df = read_gold(vista)
+    st.dataframe(df)
 
-# --- Conexión Gold ---
-@st.cache_resource
-def get_engine():
-    if not USE_DB:
-        return None
-    return sqlalchemy.create_engine(DATABASE_URL)
+with tab4:
+    st.subheader("Reporte Ejecutivo")
+    st.write("Aquí iría el resumen narrativo o PDF generado...")
+    # Puedes agregar generación de PDF o markdown aquí más adelante
 
-def read_gold(view: str) -> pd.DataFrame:
-    if not USE_DB:
-        return pd.DataFrame()
-    engine = get_engine()
-    return pd.read_sql(f'SELECT * FROM retail_gold.{view}', engine)
-
-# --- C2: Resumen — KPI cards ---
-st.header("Resumen")
-rotacion = read_gold("v_rotacion_inventario")
-alertas = read_gold("v_alertas_stock")
-
-if USE_DB and not rotacion.empty:
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Productos con rotación", rotacion["producto_id"].nunique())
-    with col2:
-        st.metric("Índice rotación (media)", f"{rotacion['indice_rotacion'].mean():.2f}" if "indice_rotacion" in rotacion.columns else "—")
-    with col3:
-        st.metric("Alertas stock crítico", len(alertas) if not alertas.empty else 0)
-else:
-    st.caption("Conecta NEON_DATABASE_URL para ver KPIs desde Gold.")
-
-# --- C3: Comparativa — gráficos ---
-st.header("Comparativa")
-if USE_DB and not rotacion.empty:
-    fig = px.bar(
-        rotacion.head(20),
-        x="producto_id",
-        y="indice_rotacion",
-        color="tienda_id",
-        title="Índice de rotación por producto/tienda (top 20)",
-        labels={"indice_rotacion": "Rotación", "producto_id": "Producto"},
-    )
-    st.plotly_chart(fig, use_container_width=True)
-if USE_DB and not alertas.empty:
-    st.subheader("Stock crítico (detalle)")
-    st.dataframe(alertas, use_container_width=True, hide_index=True)
-else:
-    st.caption("Sin datos de comparativa hasta conectar BD.")
-
-# --- C4: Detalle — tablas filtrables ---
-st.header("Detalle")
-if USE_DB:
-    tab_rot, tab_alert, tab_opp = st.tabs(["Rotación", "Alertas stock", "Oportunidad venta"])
-    with tab_rot:
-        df_rot = read_gold("v_rotacion_inventario")
-        if not df_rot.empty:
-            st.dataframe(df_rot, use_container_width=True, hide_index=True)
-    with tab_alert:
-        df_alert = read_gold("v_alertas_stock")
-        if not df_alert.empty:
-            st.dataframe(df_alert, use_container_width=True, hide_index=True)
-    with tab_opp:
-        try:
-            df_opp = read_gold("v_oportunidad_venta")
-            if not df_opp.empty:
-                st.dataframe(df_opp, use_container_width=True, hide_index=True)
-            else:
-                st.caption("Sin datos de oportunidad de venta.")
-        except Exception:
-            st.caption("Vista v_oportunidad_venta no disponible o sin datos.")
-else:
-    st.caption("Conecta la BD para ver tablas Gold.")
-
-# --- C5: Reporte ejecutivo ---
-st.header("Reporte ejecutivo")
-if USE_DB and (not rotacion.empty or not alertas.empty):
-    st.markdown("""
-    - **Objetivo SIMIR:** Reducir 12% stock inmovilizado y aumentar 8% ventas mediante alertas.
-    - **KPIs:** Rotación (Ventas/Stock prom), Stock crítico (<7 días venta prevista), Oportunidad (precio vs tendencia).
-    - **Trazabilidad:** Todas las métricas provienen de vistas Gold (retail_gold).
-    """)
-else:
-    st.caption("Resumen ejecutivo disponible con datos Gold cargados.")
+logger.info("App Streamlit renderizada correctamente")
