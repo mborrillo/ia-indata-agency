@@ -11,6 +11,62 @@ import plotly.express as px
 from dotenv import load_dotenv
 import os
 
+import logging
+from dotenv import load_dotenv
+import os
+
+# Cargar variables de entorno (ya lo tenías del Punto 1)
+load_dotenv()
+
+# Configuración global de logging
+logging.basicConfig(
+    level=logging.INFO,                         # INFO = mensajes normales, WARNING = advertencias, ERROR = fallos
+    format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.StreamHandler(),                # Muestra en consola / terminal
+        # Opcional: guardar también en archivo (descomenta si quieres)
+        # logging.FileHandler("app.log", mode='a')
+    ]
+)
+
+# Logger específico para este archivo (mejor trazabilidad)
+logger = logging.getLogger(__name__)
+
+# ------------------- Ejemplos de uso en el código existente -------------------
+
+# Donde verificas la conexión a la DB (reemplaza o agrega)
+DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    logger.warning("No se encontró NEON_DATABASE_URL ni DATABASE_URL en .env ni variables de entorno")
+    st.warning("No se encontró conexión a la base de datos. Usando datos estáticos de ejemplo.")
+    USE_DB = False
+else:
+    logger.info(f"Conexión configurada → NEON_DATABASE_URL detectada (longitud: {len(DATABASE_URL)})")
+    st.success("Conexión a base de datos configurada correctamente.")
+    USE_DB = True
+
+# En la función que lee datos (ej. read_gold o similar)
+def read_gold(view: str) -> pd.DataFrame:
+    if not USE_DB:
+        logger.info(f"Modo demo: devolviendo DataFrame vacío para vista {view}")
+        return pd.DataFrame()
+    
+    try:
+        engine = get_engine()  # tu función de conexión
+        query = f'SELECT * FROM retail_gold.{view}'
+        df = pd.read_sql(query, engine)
+        logger.info(f"Consulta exitosa → {len(df)} filas cargadas desde {view}")
+        return df
+    except Exception as e:
+        logger.error(f"Error al leer vista {view}: {str(e)}", exc_info=True)  # exc_info=True muestra traceback
+        st.error(f"Error al conectar/leer la base de datos: {str(e)}")
+        return pd.DataFrame()
+
+# En cualquier otro punto importante, por ejemplo al cargar la app
+logger.info("Aplicación Streamlit SIMIR iniciada")
+
 # Cargar variables de entorno desde .env si existe
 load_dotenv()  # Busca .env en la carpeta actual o superiores
 
