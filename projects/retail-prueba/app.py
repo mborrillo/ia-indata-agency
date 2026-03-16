@@ -8,19 +8,29 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+from dotenv import load_dotenv
+import os
+
+# Cargar variables de entorno desde .env si existe
+load_dotenv()  # Busca .env en la carpeta actual o superiores
+
 try:
     import sqlalchemy
 except ImportError:
     st.error("Instalar: pip install sqlalchemy psycopg2-binary")
     st.stop()
 
-DATABASE_URL = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
+# Variables de entorno para la conexión a la base de datos
+DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+
+# Verificación de la URL de la base de datos
 if not DATABASE_URL:
-    st.warning("Definir NEON_DATABASE_URL o DATABASE_URL para conectar a Neon.")
+    st.warning("No se encontró NEON_DATABASE_URL ni DATABASE_URL en variables de entorno ni en .env.")
     st.info("Usando datos de ejemplo estáticos para demo.")
     USE_DB = False
 else:
     USE_DB = True
+    st.success("Conexión a base de datos configurada correctamente.")
 
 st.set_page_config(page_title="SIMIR — Inventarios Retail", layout="wide")
 st.title("SIMIR — Sistema de Inteligencia para Gestión de Inventarios Retail")
