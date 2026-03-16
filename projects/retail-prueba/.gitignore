@@ -1,0 +1,24 @@
+# --- SEGURIDAD AGENCIA ---
+# Ignorar archivos de credenciales y secretos
+.env
+
+# --- PYTHON ---
+# Ignorar entornos virtuales (la carpeta pesada)
+.venv/
+env/
+venv/
+ENV/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- SISTEMA ---
+# Archivos temporales de Windows
+Thumbs.db
+desktop.ini
+
+# --- IDE (CURSOR/VSCODE) ---
+.vscode/
+.history/
