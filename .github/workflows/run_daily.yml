@@ -23,17 +23,3 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r projects/retail-prueba/requirements.txt
-
-      - name: Run ETL script
-        env:
-          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
-        run: python projects/retail-prueba/etl/run_daily.py
-
-      - name: Commit any changes (if ETL modifies files)
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Auto-commit: ETL daily run" || echo "No changes to commit"
-          git push
-        continue-on-error: true
