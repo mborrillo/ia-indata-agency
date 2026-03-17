@@ -2,9 +2,8 @@ name: Run Daily ETL - Retail Prueba
 
 on:
   schedule:
-    # Cada día a las 03:00 UTC (ajusta la hora según tu zona)
     - cron: '0 3 * * *'
-  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub
+  workflow_dispatch:
 
 jobs:
   run-etl:
@@ -24,16 +23,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r projects/retail-prueba/requirements.txt
 
+      - name: Debug - Verificar carpeta data/
+        run: |
+          echo "=== LISTANDO CARPETA DATA ==="
+          ls -la projects/retail-prueba/data || echo "Carpeta data/ NO EXISTE"
+          echo "=== CONTENIDO DE ventas.csv ==="
+          if [ -f projects/retail-prueba/data/ventas.csv ]; then
+            head -n 8 projects/retail-prueba/data/ventas.csv
+          else
+            echo "ventas.csv NO ENCONTRADO"
+          fi
+
       - name: Run ETL script
         env:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         run: python projects/retail-prueba/etl/run_daily.py
-
-      - name: Commit any changes (if ETL modifies files)
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Auto-commit: ETL daily run" || echo "No changes to commit"
-          git push
-        continue-on-error: true
