@@ -62,3 +62,33 @@ pytest
 - Tests de cálculo: `tests/test_kpis.py` valida fórmulas de rotación y stock crítico.
 - Integridad: `tests/test_integrity.py` valida grano Silver sin duplicados.
 - Security: sin API keys en código; usar NEON_DATABASE_URL en entorno/secrets.
+
+
+# retail-prueba / SIMIR
+
+-------------------------------------------------------------------------------------------------------------------
+**Sistema de Inteligencia para Gestión de Inventarios Retail**  
+Prototipo funcional (v0.9 – marzo 2026)
+
+## Qué hace
+
+- Ingesta diaria desde CSVs → arquitectura Medallón (Bronze → Silver → Gold)
+- Calcula KPIs reales: rotación inventario, stock crítico, oportunidades de venta
+- Dashboard Streamlit: Resumen (tarjetas), Comparativa (gráficos Plotly), Detalle (tablas), Reporte ejecutivo
+- Conexión a Neon Postgres vía .env (seguro)
+
+## Estado actual
+
+- Conexión a DB: OK (detecta NEON_DATABASE_URL)
+- ETL: ejecutable (run_daily.py)
+- App: desplegable en Streamlit Cloud
+- Datos: si Gold está vacío → muestra mensajes claros
+
+## Cómo verlo rápido
+
+1. Conecta Neon (copia .env.example → .env y rellena)
+2. Ejecuta ETL (python etl/run_daily.py) → carga datos
+3. Ejecuta app (streamlit run app.py) → localhost:8501
+
+## Estructura clave
+
