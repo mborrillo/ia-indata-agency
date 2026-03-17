@@ -109,4 +109,4 @@ SELECT
 FROM precios_recientes p
 INNER JOIN ultima_fecha u ON p.fecha = u.ref_fecha;
 
-COMMENT ON VIEW retail_gold.v_oportunidad_venta IS 'Gold: Comparativa precio local vs tendencia (media 7d local; tendencia mercado externa a integrar). Spec §3.';
+COMMENT ON VIEW retail_gold.v_oportunidad_venta IS 'Gold: Comparativa precio local vs tendencia (media 7d local; tendencia mercado externa a integrar). Spec §3.;';
