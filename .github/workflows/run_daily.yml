@@ -36,5 +36,3 @@ jobs:
         env:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         run: python projects/retail-prueba/etl/run_daily.py
-
-      # Quitamos el git commit/push que fallaba
