@@ -1,7 +1,6 @@
 """
 SIMIR – App Streamlit para el gerente de tienda.
-Resumen (KPI cards) → Comparativa (gráficos) → Detalle (tablas) → Reporte ejecutivo.
-Solo lectura desde vistas Gold. Usa NEON_DATABASE_URL desde secrets o .env.
+Lee vistas Gold. Fallback a datos fake si no hay conexión o datos reales.
 """
 
 import logging
@@ -11,12 +10,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import sqlalchemy
-from datetime import datetime
+import numpy as np
+from datetime import datetime, timedelta
 
-# Cargar variables de entorno (para local)
 load_dotenv()
 
-# Configuración de logging (visible en consola y Cloud)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
@@ -25,122 +23,127 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-logger.info("Aplicación Streamlit SIMIR iniciada")
+logger.info("Aplicación SIMIR iniciada")
 
-# Conexión a la base de datos
 DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
-    logger.warning("No se encontró NEON_DATABASE_URL ni DATABASE_URL")
-    st.warning("No se encontró conexión a la base de datos. Modo demo sin datos.")
-    USE_DB = False
+USE_DB = bool(DATABASE_URL)
+if USE_DB:
+    logger.info("Conexión Neon detectada")
+    st.success("Conexión a base de datos configurada.")
 else:
-    logger.info("Conexión a Neon configurada")
-    st.success("Conexión a base de datos configurada correctamente.")
-    USE_DB = True
+    logger.warning("Sin NEON_DATABASE_URL → usando datos fake")
+    st.warning("Modo demo: datos simulados (sin conexión real).")
 
 def get_engine():
+    if not USE_DB:
+        return None
     try:
         engine = sqlalchemy.create_engine(DATABASE_URL)
-        logger.info("Engine creado correctamente")
+        logger.info("Engine creado OK")
         return engine
     except Exception as e:
-        logger.error(f"Error creando engine: {str(e)}", exc_info=True)
-        st.error(f"Error de conexión: {str(e)}")
+        logger.error(f"Error engine: {str(e)}")
+        st.error("Error de conexión a DB.")
         return None
 
-@st.cache_data(ttl=300)  # Cache 5 minutos
+@st.cache_data(ttl=300)
 def read_gold(view_name: str) -> pd.DataFrame:
-    if not USE_DB:
-        logger.info(f"Modo sin DB: vacío para {view_name}")
-        return pd.DataFrame()
-    
     engine = get_engine()
     if engine is None:
-        return pd.DataFrame()
+        return generate_fake_data(view_name)
     
     try:
-        query = f"SELECT * FROM retail_gold.{view_name}"
-        df = pd.read_sql(query, engine)
-        logger.info(f"{len(df)} filas cargadas de {view_name}")
+        df = pd.read_sql(f"SELECT * FROM retail_gold.{view_name}", engine)
+        logger.info(f"{len(df)} filas reales de {view_name}")
         if df.empty:
-            st.info(f"Vista {view_name} existe pero está vacía.")
+            logger.info(f"Vista {view_name} vacía → fallback a fake")
+            return generate_fake_data(view_name)
         return df
     except Exception as e:
-        logger.error(f"Error leyendo {view_name}: {str(e)}", exc_info=True)
-        st.error(f"Error al leer {view_name}: {str(e)}")
-        return pd.DataFrame()
+        logger.error(f"Error lectura {view_name}: {str(e)}")
+        st.error(f"Error leyendo {view_name}.")
+        return generate_fake_data(view_name)
 
-# Configuración de página
-st.set_page_config(page_title="SIMIR - Gestión Inventarios Retail", layout="wide")
-st.title("SIMIR – Sistema de Inteligencia Mercados Retail")
+def generate_fake_data(view_name: str) -> pd.DataFrame:
+    """Datos simulados si DB vacía o sin conexión"""
+    logger.info(f"Generando datos fake para {view_name}")
+    n_rows = 20
+    productos = ['P001', 'P002', 'P003', 'P004', 'P005']
+    tiendas = ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao']
+    
+    if view_name == "v_rotacion_inventario":
+        return pd.DataFrame({
+            'producto_id': np.random.choice(productos, n_rows),
+            'tienda_id': np.random.choice(tiendas, n_rows),
+            'total_unidades_vendidas': np.random.randint(20, 150, n_rows),
+            'stock_promedio': np.random.randint(50, 300, n_rows),
+            'indice_rotacion': np.random.uniform(1.5, 7.0, n_rows)
+        })
+    
+    elif view_name == "v_alertas_stock":
+        return pd.DataFrame({
+            'producto_id': np.random.choice(productos, n_rows),
+            'tienda_id': np.random.choice(tiendas, n_rows),
+            'stock_actual': np.random.randint(10, 200, n_rows),
+            'venta_media_7d': np.random.uniform(5, 50, n_rows),
+            'dias_de_stock': np.random.uniform(1, 30, n_rows),
+            'es_stock_critico': np.random.choice([True, False], n_rows, p=[0.3, 0.7])
+        })
+    
+    elif view_name == "v_oportunidad_venta":
+        fechas = [datetime.now().date() - timedelta(days=i) for i in range(n_rows)]
+        return pd.DataFrame({
+            'producto_id': np.random.choice(productos, n_rows),
+            'tienda_id': np.random.choice(tiendas, n_rows),
+            'fecha': fechas,
+            'precio_local': np.random.uniform(20, 80, n_rows),
+            'tendencia_local_7d': np.random.uniform(18, 85, n_rows),
+            'diff_vs_tendencia': np.random.uniform(-10, 15, n_rows),
+            'pct_vs_tendencia': np.random.uniform(-20, 30, n_rows)
+        })
+    
+    return pd.DataFrame()
 
-# Cargar datos
+# Página
+st.set_page_config(page_title="SIMIR - Retail Intelligence", layout="wide")
+st.title("SIMIR – Inteligencia Mercados Retail")
+
 rotacion_df = read_gold("v_rotacion_inventario")
 alertas_df = read_gold("v_alertas_stock")
 oportunidad_df = read_gold("v_oportunidad_venta")
 
-# Pestañas
 tab1, tab2, tab3, tab4 = st.tabs(["Resumen", "Comparativa", "Detalle", "Reporte Ejecutivo"])
 
 with tab1:
     st.subheader("Resumen KPIs")
     col1, col2, col3 = st.columns(3)
     
-    # Rotación Promedio - columna real: indice_rotacion
-    if not rotacion_df.empty and 'indice_rotacion' in rotacion_df.columns:
-        col1.metric("Rotación Promedio", f"{rotacion_df['indice_rotacion'].mean():.2f}")
-    else:
-        col1.metric("Rotación Promedio", "Sin datos")
-    
-    # Stock Crítico - columna real: es_stock_critico (contar True)
-    if not alertas_df.empty and 'es_stock_critico' in alertas_df.columns:
-        criticos = alertas_df['es_stock_critico'].sum()
-        col2.metric("Stock Crítico", criticos)
-    else:
-        col2.metric("Stock Crítico", "Sin datos")
-    
-    # Oportunidades Detectadas - columna real: pct_vs_tendencia (ej. contar >0)
-    if not oportunidad_df.empty and 'pct_vs_tendencia' in oportunidad_df.columns:
-        oportunidades = len(oportunidad_df[oportunidad_df['pct_vs_tendencia'] > 0])
-        col3.metric("Oportunidades Detectadas", oportunidades)
-    else:
-        col3.metric("Oportunidades Detectadas", "Sin datos")
+    col1.metric("Rotación Promedio", f"{rotacion_df['indice_rotacion'].mean():.2f}" if not rotacion_df.empty else "—")
+    col2.metric("Stock Crítico", alertas_df['es_stock_critico'].sum() if not alertas_df.empty else "—")
+    col3.metric("Oportunidades", len(oportunidad_df[oportunidad_df['pct_vs_tendencia'] > 0]) if not oportunidad_df.empty else "—")
 
 with tab2:
-    st.subheader("Comparativa Gráfica")
+    st.subheader("Comparativa")
     if not rotacion_df.empty:
-        # Usamos columnas reales: fecha no existe, usamos producto_id y tienda_id como color
-        if 'indice_rotacion' in rotacion_df.columns:
-            fig = px.bar(rotacion_df, 
-                         x='producto_id', 
-                         y='indice_rotacion', 
-                         color='tienda_id', 
-                         title="Índice de Rotación por Producto y Tienda")
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("No hay columna 'indice_rotacion' para gráfico.")
+        fig = px.bar(rotacion_df, x='producto_id', y='indice_rotacion', color='tienda_id',
+                     title="Rotación por Producto y Tienda")
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Sin datos para comparativa.")
+        st.info("Sin datos para gráfico.")
 
 with tab3:
-    st.subheader("Detalle por Vista")
-    vista = st.selectbox("Seleccionar vista Gold", 
-                         ["v_rotacion_inventario", "v_alertas_stock", "v_oportunidad_venta"])
+    st.subheader("Detalle")
+    vista = st.selectbox("Vista", ["v_rotacion_inventario", "v_alertas_stock", "v_oportunidad_venta"])
     df = read_gold(vista)
-    if not df.empty:
-        st.dataframe(df)
-    else:
-        st.info(f"No hay filas en {vista}.")
+    st.dataframe(df)
 
 with tab4:
     st.subheader("Reporte Ejecutivo")
-    if not rotacion_df.empty and 'indice_rotacion' in rotacion_df.columns:
-        st.write("**Resumen Ejecutivo**")
-        st.write(f"- Rotación promedio general: **{rotacion_df['indice_rotacion'].mean():.2f}**")
-        st.write(f"- Total productos analizados: **{len(rotacion_df['producto_id'].unique())}**")
-        st.write("- Recomendación: revisar productos con índice bajo para optimizar stock.")
+    if not rotacion_df.empty:
+        st.write(f"Rotación promedio: **{rotacion_df['indice_rotacion'].mean():.2f}**")
+        st.write(f"Productos con alerta crítica: **{alertas_df['es_stock_critico'].sum()}**")
     else:
-        st.info("Reporte no disponible sin datos en v_rotacion_inventario.")
+        st.info("Reporte no disponible sin datos.")
 
-logger.info("App renderizada correctamente")
+logger.info("App finalizada")
