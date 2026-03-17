@@ -67,6 +67,7 @@ pytest
 # retail-prueba / SIMIR
 
 -------------------------------------------------------------------------------------------------------------------
+
 **Sistema de Inteligencia para Gestión de Inventarios Retail**  
 Prototipo funcional (v0.9 – marzo 2026)
 
@@ -91,4 +92,18 @@ Prototipo funcional (v0.9 – marzo 2026)
 3. Ejecuta app (streamlit run app.py) → localhost:8501
 
 ## Estructura clave
+projects/retail-prueba/
+├── app.py                  # Dashboard Streamlit
+├── requirements.txt
+├── .env.example            # Plantilla conexión Neon
+├── etl/                    # Ingesta y transformación
+│   ├── run_daily.py
+│   ├── load_bronze.py
+│   ├── silver.py
+│   └── db.py
+├── sql/                    # DDL completo
+│   ├── 01_schemas.sql
+│   └── 04_gold_views.sql
+├── data/                   # CSVs ejemplo
+└── tests/                  # Pruebas básicas
 
