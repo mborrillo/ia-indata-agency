@@ -1,7 +1,6 @@
 """
 Carga datos crudos desde CSVs a capa Bronze.
-Lee archivos desde la carpeta data/ relativa al proyecto.
-Usa logging detallado para ver exactamente qué pasa.
+Versión reforzada con logging exhaustivo y manejo de errores.
 """
 
 import logging
@@ -12,43 +11,51 @@ from sqlalchemy import create_engine
 logger = logging.getLogger(__name__)
 
 def load_bronze(engine):
-    logger.info("Iniciando carga Bronze desde CSVs...")
+    logger.info("=== INICIO CARGA BRONZE ===")
     
-    # Ruta correcta relativa al proyecto (funciona en Actions y local)
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(base_dir, 'data')
+    # Ruta absoluta relativa al proyecto
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(script_dir))
+    data_dir = os.path.join(project_root, 'data')
     
-    logger.info(f"Buscando CSVs en: {data_dir}")
+    logger.info(f"Ruta calculada para data/: {data_dir}")
     
     if not os.path.exists(data_dir):
-        logger.error(f"Directorio data/ NO encontrado en {data_dir}")
+        logger.error(f"Directorio data/ NO existe en {data_dir}")
         return
     
-    csv_files = {
+    logger.info(f"Contenido de data/: {os.listdir(data_dir)}")
+    
+    csv_mapping = {
         'ventas': 'ventas.csv',
         'stock': 'stock.csv',
         'precios': 'precios.csv'
     }
     
-    for table_name, csv_filename in csv_files.items():
-        csv_path = os.path.join(data_dir, csv_filename)
-        logger.info(f"Procesando: {csv_path}")
+    for table, filename in csv_mapping.items():
+        full_path = os.path.join(data_dir, filename)
+        logger.info(f"Intentando cargar {filename} → {full_path}")
         
-        if not os.path.exists(csv_path):
-            logger.warning(f"Archivo NO encontrado: {csv_filename}")
+        if not os.path.isfile(full_path):
+            logger.warning(f"Archivo {filename} NO encontrado en {data_dir}")
             continue
         
         try:
-            df = pd.read_csv(csv_path)
+            logger.info(f"Leyendo CSV: {full_path}")
+            df = pd.read_csv(full_path)
             row_count = len(df)
+            logger.info(f"CSV leído OK: {row_count} filas, columnas: {list(df.columns)}")
+            
             if row_count == 0:
-                logger.warning(f"CSV vacío: {csv_filename}")
+                logger.warning(f"CSV {filename} está vacío")
                 continue
             
-            df.to_sql(table_name, engine, schema='retail_bronze', if_exists='replace', index=False)
-            logger.info(f"ÉXITO: {row_count} filas insertadas en retail_bronze.{table_name}")
+            logger.info(f"Insertando {row_count} filas en retail_bronze.{table}")
+            df.to_sql(table, engine, schema='retail_bronze', if_exists='replace', index=False)
+            logger.info(f"ÉXITO: {row_count} filas insertadas en retail_bronze.{table}")
+        except pd.errors.EmptyDataError:
+            logger.warning(f"CSV {filename} vacío o mal formado")
         except Exception as e:
-            logger.error(f"ERROR cargando {csv_filename}: {str(e)}", exc_info=True)
-            continue
+            logger.error(f"ERROR al procesar {filename}: {str(e)}", exc_info=True)
     
-    logger.info("Carga Bronze finalizada")
+    logger.info("=== CARGA BRONZE FINALIZADA ===")
