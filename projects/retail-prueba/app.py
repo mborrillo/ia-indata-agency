@@ -1,6 +1,6 @@
 """
 SIMIR – App Streamlit para el gerente de tienda.
-Versión final robusta: fallback fake + columnas reales + validación.
+Versión FINAL: fallback fake con mensaje claro + columnas reales.
 """
 
 import logging
@@ -32,8 +32,8 @@ if USE_DB:
     logger.info("Conexión Neon detectada")
     st.success("Conexión a base de datos configurada correctamente.")
 else:
-    logger.warning("Sin conexión DB → usando datos fake")
-    st.warning("Modo demo: datos simulados (sin conexión real).")
+    logger.warning("Sin conexión DB → usando datos simulados")
+    st.warning("⚠️ MODO DEMO: Datos simulados (sin conexión real a Neon)")
 
 def get_engine():
     if not USE_DB:
@@ -51,13 +51,14 @@ def get_engine():
 def read_gold(view_name: str) -> pd.DataFrame:
     engine = get_engine()
     if engine is None:
+        st.info("⚠️ Usando datos simulados (DB no disponible)")
         return generate_fake_data(view_name)
     
     try:
         df = pd.read_sql(f"SELECT * FROM retail_gold.{view_name}", engine)
         logger.info(f"{len(df)} filas reales de {view_name}")
         if df.empty:
-            st.info(f"Vista {view_name} vacía → datos simulados.")
+            st.info("⚠️ Vista vacía en Neon → usando datos simulados")
             return generate_fake_data(view_name)
         return df
     except Exception as e:
@@ -103,6 +104,9 @@ def generate_fake_data(view_name: str) -> pd.DataFrame:
 # Página
 st.set_page_config(page_title="SIMIR - Retail Intelligence", layout="wide")
 st.title("SIMIR – Sistema de Inteligencia Mercados Retail")
+
+if not USE_DB:
+    st.markdown("**⚠️ DATOS SIMULADOS** – Esta es una versión de demostración. Conecta Neon para ver datos reales.", unsafe_allow_html=True)
 
 rotacion_df = read_gold("v_rotacion_inventario")
 alertas_df = read_gold("v_alertas_stock")
