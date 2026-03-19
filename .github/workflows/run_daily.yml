@@ -1,7 +1,7 @@
-"""
-ETL diario SIMIR - Versión FINAL MINIMAL (inline)
-Carga CSVs directamente + Silver. Sin llamadas externas.
-"""
+##"""
+##ETL diario SIMIR - Versión FINAL MINIMAL (inline)
+##Carga CSVs directamente + Silver. Sin llamadas externas.
+##"""
 
 import logging
 from dotenv import load_dotenv
