@@ -1,6 +1,6 @@
 """
-ETL diario SIMIR - Versión FINAL con carga inline
-DDL + carga CSVs + Silver. Logging máximo.
+ETL diario SIMIR - Versión FINAL MINIMAL (inline)
+Carga CSVs directamente + Silver. Sin llamadas externas.
 """
 
 import logging
@@ -34,7 +34,7 @@ def get_engine():
         logger.info("Engine creado correctamente")
         return engine
     except Exception as e:
-        logger.error(f"Error creando engine: {str(e)}", exc_info=True)
+        logger.error(f"Error engine: {str(e)}", exc_info=True)
         raise
 
 def load_bronze_inline(engine):
@@ -45,11 +45,12 @@ def load_bronze_inline(engine):
     
     logger.info(f"Ruta data/: {data_dir}")
     if not os.path.exists(data_dir):
-        logger.error(f"data/ NO encontrada")
+        logger.error("data/ NO encontrada")
         return
     
     logger.info(f"Archivos en data/: {os.listdir(data_dir)}")
     
+    # Carga directa de CSVs
     files = {
         'ventas': 'ventas.csv',
         'stock': 'stock.csv',
@@ -58,27 +59,23 @@ def load_bronze_inline(engine):
     
     for table, filename in files.items():
         path = os.path.join(data_dir, filename)
-        logger.info(f"Procesando {filename} → {path}")
-        
+        logger.info(f"Procesando {filename}")
         if not os.path.isfile(path):
             logger.warning(f"{filename} no encontrado")
             continue
-        
         try:
             df = pd.read_csv(path)
             row_count = len(df)
             logger.info(f"CSV leído OK: {row_count} filas | Columnas: {list(df.columns)}")
-            
             if row_count == 0:
                 logger.warning(f"{filename} vacío")
                 continue
-            
             df.to_sql(table, engine, schema='retail_bronze', if_exists='replace', index=False)
             logger.info(f"ÉXITO: {row_count} filas insertadas en retail_bronze.{table}")
         except Exception as e:
             logger.error(f"ERROR en {filename}: {str(e)}", exc_info=True)
     
-    logger.info("=== CARGA BRONZE FINALIZADA ===")
+    logger.info("=== CARGA BRONZE INLINE FINALIZADA ===")
 
 def main():
     try:
