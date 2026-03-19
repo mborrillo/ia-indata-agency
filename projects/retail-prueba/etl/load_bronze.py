@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def load_bronze(engine):
     logger.info("=== INICIO CARGA BRONZE ===")
     
-    # Ruta absoluta relativa al proyecto
+    # Ruta correcta relativa al proyecto (funciona en Actions y local)
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(script_dir))
     data_dir = os.path.join(project_root, 'data')
