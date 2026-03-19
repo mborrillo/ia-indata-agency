@@ -25,13 +25,21 @@ jobs:
 
       - name: Debug - Verificar carpeta data/
         run: |
-          echo "=== LISTANDO CARPETA DATA ==="
-          ls -la projects/retail-prueba/data || echo "Carpeta data/ NO EXISTE"
-          echo "=== CONTENIDO DE ventas.csv ==="
+          echo "=== LISTADO DE CARPETA DATA ==="
+          ls -la projects/retail-prueba/data || echo "Carpeta data/ NO ENCONTRADA"
+          echo " "
+          echo "=== PRIMERAS LÍNEAS DE ventas.csv ==="
           if [ -f projects/retail-prueba/data/ventas.csv ]; then
             head -n 8 projects/retail-prueba/data/ventas.csv
           else
             echo "ventas.csv NO ENCONTRADO"
+          fi
+          echo " "
+          echo "=== PRIMERAS LÍNEAS DE stock.csv ==="
+          if [ -f projects/retail-prueba/data/stock.csv ]; then
+            head -n 8 projects/retail-prueba/data/stock.csv
+          else
+            echo "stock.csv NO ENCONTRADO"
           fi
 
       - name: Run ETL script
