@@ -1,24 +1,29 @@
-# --- SEGURIDAD AGENCIA ---
-# Ignorar archivos de credenciales y secretos
+# NUNCA subir credenciales
 .env
+.env.*
+*.env
+.streamlit/secrets.toml
 
-# --- PYTHON ---
-# Ignorar entornos virtuales (la carpeta pesada)
-.venv/
-env/
-venv/
-ENV/
-
-# Archivos temporales de Python
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
+.venv/
+venv/
+.Python
 
-# --- SISTEMA ---
-# Archivos temporales de Windows
-Thumbs.db
-desktop.ini
+# Datos locales (nunca datos de clientes en el repo)
+data/raw/
+data/processed/
+*.csv
+*.xlsx
+*.parquet
 
-# --- IDE (CURSOR/VSCODE) ---
+# IDE
+.cursor/
 .vscode/
-.history/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
