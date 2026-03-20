@@ -15,9 +15,9 @@ venv/
 # Datos locales (nunca datos de clientes en el repo)
 data/raw/
 data/processed/
-*.csv
-*.xlsx
-*.parquet
+data/*.csv
+data/*.xlsx
+data/*.parquet
 
 # IDE
 .cursor/
