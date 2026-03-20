@@ -1,0 +1,43 @@
+name: ETL Diario — MEMO (Energía y Mercados)
+
+on:
+  schedule:
+    - cron: '0 8 * * 1-5'   # Lunes a viernes a las 08:00 UTC (10:00 Madrid)
+  workflow_dispatch:          # Ejecución manual desde GitHub Actions
+
+jobs:
+  etl:
+    name: Ingesta diaria de datos
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/energia-mercados
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: projects/energia-mercados/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar ETL
+        env:
+          NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
+        run: python -m etl.run_daily
+
+      - name: Ejecutar tests de calidad
+        env:
+          NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
+        run: pytest tests/ -v --tb=short
+
+      - name: Notificar fallo
+        if: failure()
+        run: |
+          echo "::error::ETL MEMO falló — revisar logs arriba"
