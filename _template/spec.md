@@ -38,4 +38,3 @@
 - [ ] 0 API keys en el código
 - [ ] GitHub Actions ejecuta verde
 - [ ] App carga en menos de 5 segundos
-```
