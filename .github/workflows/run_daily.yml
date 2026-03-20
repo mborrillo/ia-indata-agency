@@ -1,99 +1,53 @@
-##"""
-##ETL diario SIMIR - Versión FINAL MINIMAL (inline)
-##Carga CSVs directamente + Silver. Sin llamadas externas.
-##"""
+name: ETL Diario — retail-prueba
 
-import logging
-from dotenv import load_dotenv
-import os
-import sys
-import pandas as pd
-from sqlalchemy import create_engine
+on:
+  schedule:
+    - cron: '0 7 * * *'   # Cada día a las 07:00 UTC (09:00 Madrid)
+  workflow_dispatch:        # Permite ejecutarlo manualmente desde GitHub
 
-load_dotenv()
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/retail-prueba
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-logger.info("=== INICIO ETL DIARIO SIMIR ===")
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: projects/retail-prueba/requirements.txt
 
-DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
 
-if not DATABASE_URL:
-    logger.error("No se encontró NEON_DATABASE_URL. Abortando.")
-    sys.exit(1)
+      - name: Ejecutar ETL
+        env:
+          NEON_DATABASE_URL: ${{ secrets.RETAIL_PRUEBA_NEON_URL }}
+        run: python etl/run_daily.py
 
-def get_engine():
-    try:
-        engine = create_engine(DATABASE_URL)
-        logger.info("Engine creado correctamente")
-        return engine
-    except Exception as e:
-        logger.error(f"Error engine: {str(e)}", exc_info=True)
-        raise
+      - name: Notificar fallo
+        if: failure()
+        run: echo "ETL falló — revisar logs en Actions"
+```
 
-def load_bronze_inline(engine):
-    logger.info("=== INICIO CARGA BRONZE INLINE ===")
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(os.path.dirname(script_dir))
-    data_dir = os.path.join(project_root, 'data')
-    
-    logger.info(f"Ruta data/: {data_dir}")
-    if not os.path.exists(data_dir):
-        logger.error("data/ NO encontrada")
-        return
-    
-    logger.info(f"Archivos en data/: {os.listdir(data_dir)}")
-    
-    # Carga directa de CSVs
-    files = {
-        'ventas': 'ventas.csv',
-        'stock': 'stock.csv',
-        'precios': 'precios.csv'
-    }
-    
-    for table, filename in files.items():
-        path = os.path.join(data_dir, filename)
-        logger.info(f"Procesando {filename}")
-        if not os.path.isfile(path):
-            logger.warning(f"{filename} no encontrado")
-            continue
-        try:
-            df = pd.read_csv(path)
-            row_count = len(df)
-            logger.info(f"CSV leído OK: {row_count} filas | Columnas: {list(df.columns)}")
-            if row_count == 0:
-                logger.warning(f"{filename} vacío")
-                continue
-            df.to_sql(table, engine, schema='retail_bronze', if_exists='replace', index=False)
-            logger.info(f"ÉXITO: {row_count} filas insertadas en retail_bronze.{table}")
-        except Exception as e:
-            logger.error(f"ERROR en {filename}: {str(e)}", exc_info=True)
-    
-    logger.info("=== CARGA BRONZE INLINE FINALIZADA ===")
+Commit: `"fix: replace Python files with valid GitHub Actions YAML"`
 
-def main():
-    try:
-        logger.info("Aplicando DDL...")
-        # Tu código de DDL aquí (ya funciona)
-        logger.info("DDL aplicado")
+Haz lo mismo con el otro archivo `.yml` — si tienen contenido casi idéntico, puedes borrar uno y quedarte solo con este.
 
-        engine = get_engine()
-        load_bronze_inline(engine)
-        
-        logger.info("Transformando Silver...")
-        # Tu código de silver aquí (ya funciona)
-        logger.info("Silver transformado")
+---
 
-        logger.info("=== ETL FINALIZADO CON ÉXITO ===")
-    except Exception as e:
-        logger.error(f"Error crítico: {str(e)}", exc_info=True)
-        sys.exit(1)
+### Fix 6 — Actualizar `.gitignore` de retail-prueba para excluir los CSV
 
-if __name__ == "__main__":
-    main()
+Ve a `projects/retail-prueba/.gitignore` → editar → añade al final:
+```
+# Datos locales (nunca subir datos de clientes)
+data/raw/
+data/processed/
+data/*.csv
+data/*.xlsx
