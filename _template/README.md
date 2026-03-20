@@ -1,4 +1,4 @@
-# _template — Punto de partida para cada proyecto nuevo
+# Punto de partida para cada proyecto nuevo (_template/)
 
 ## Cómo usar este template
 1. Copia toda esta carpeta → pégala en `projects/nombre-cliente/`
