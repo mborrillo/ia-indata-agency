@@ -46,8 +46,8 @@
 NEON_DATABASE_URL=postgresql://user:pass@ep-xxx.eu-west-2.aws.neon.tech/dbname
 
 # ── APIs externas (añade las que uses) ─────────────
-# AEMET_API_KEY= eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OGJvcnJpc21hckBnbWFpbC5jb20iLCJqdGkiOiI1YzRjYzlkZC04OTI0LTQzZjgtOTI1OC1hZWZiZjRhOWIzNGMiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc3MTA4MjI3MSwidXNlcklkIjoiNWM0Y2M5ZGQtODkyNC00M2Y4LTkyNTgtYWVmYmY0YTliMzRjIiwicm9sZSI6IiJ9.EQqSYmGFYaCQvhzPv2gxYHkwa1Zyqr9sDLRCG8xLaV4
-# OPENWEATHER_API_KEY= 59eee59042fc7ab79f22571ce2984161
+# AEMET_API_KEY= 
+# OPENWEATHER_API_KEY= 
 # YAHOO_FINANCE no requiere key
 
 # ── Notificaciones (opcional) ──────────────────────
