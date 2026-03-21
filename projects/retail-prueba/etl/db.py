@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("NEON_RETAIL_PRUEBA") or os.getenv("DATABASE_URL")
 
 def get_engine():
     if not DATABASE_URL:
