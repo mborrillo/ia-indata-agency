@@ -31,7 +31,7 @@ BCE_URL = (
     "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A"
     "?format=jsondata&lastNObservations=1"
 )
-INE_URL = "https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/IPC206449?nult=1"
+INE_URL = "https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/IPC251856?nult=1"
 
 
 def get_conn():
