@@ -35,7 +35,7 @@ jobs:
       - name: Ejecutar tests de calidad
         env:
           NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
-        run: pytest tests/ -v --tb=short
+        run: pytest projects/energia-mercados/tests/ -v --tb=short
 
       - name: Notificar fallo
         if: failure()
