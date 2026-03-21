@@ -32,7 +32,7 @@ jobs:
           NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
         run: python -m etl.run_daily
 
-      - name: Ejecutar tests de calidad
+      - name: Ejecutar test de calidad
         env:
           NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
         run: pytest projects/energia-mercados/test/ -v --tb=short
