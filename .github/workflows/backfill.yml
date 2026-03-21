@@ -1,0 +1,24 @@
+name: Backfill histórico MEMO
+
+on:
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: 'Días a cargar (default: 20)'
+        default: '20'
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r projects/energia-mercados/requirements.txt
+      - name: Ejecutar backfill
+        env:
+          NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
+        run: |
+          cd projects/energia-mercados
+          python etl/backfill.py ${{ github.event.inputs.dias }}
