@@ -28,8 +28,7 @@ jobs:
 
       - name: Ejecutar ETL
         env:
-          #NEON_DATABASE_URL: ${{secrets.NEON_RETAIL_PRUEBA}}
-          NEON_RETAIL_PRUEBA: ${{secrets.NEON_RETAIL_PRUEBA}}
+          NEON_DATABASE_URL: ${{secrets.NEON_RETAIL_PRUEBA}}
         run: python etl/run_daily.py
 
       - name: Notificar fallo
