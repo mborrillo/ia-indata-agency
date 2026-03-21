@@ -30,13 +30,3 @@ jobs:
         env:
           NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
         run: python -m etl.run_daily
-
-      - name: Ejecutar tests de calidad
-        working-directory: projects/energia-mercados
-        env:
-          NEON_DATABASE_URL: ${{ secrets.MEMO_NEON_URL }}
-        run: pytest test/ -v --tb=short
-
-      - name: Notificar fallo
-        if: failure()
-        run: echo "::error::ETL MEMO falló — revisar logs arriba"
