@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 logger.info("=== INICIO ETL DIARIO SIMIR ===")
 
-DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("NEON_RETAIL_PRUEBA") or os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     logger.error("No se encontró NEON_DATABASE_URL ni DATABASE_URL. Abortando ETL.")
