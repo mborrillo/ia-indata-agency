@@ -32,7 +32,7 @@ st.markdown("""
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("NEON_RETAIL_PRUEBA") or os.getenv("DATABASE_URL")
 USE_DB = bool(DATABASE_URL)
 
 if USE_DB:
