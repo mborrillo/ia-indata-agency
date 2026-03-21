@@ -1,4 +1,4 @@
-name: ETL Diario — retail-prueba
+name: retail-prueba-main
 
 on:
   schedule:
