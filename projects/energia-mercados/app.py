@@ -25,19 +25,28 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 :root {
-    --bg:     #2c303f;    #4a5065-2c303f-0c0e14
-    --bg2:    #12151f;
-    --bg3:    #181c28;
+    /* Jerarquía de fondos: más oscuro → más claro */
+    --bg:     #080a0f;   /* fondo base — casi negro azulado */
+    --bg2:    #0f1219;   /* cards y paneles — capa 1 */
+    --bg3:    #171b26;   /* hover, expanders — capa 2 */
+    --bg4:    #1f2433;   /* elementos activos — capa 3 */
+
+    /* Bordes progresivos */
     --bdr:    rgba(255,255,255,0.06);
-    --bdr2:   rgba(255,255,255,0.12);
-    --teal:   #2dd4bf;
-    --purple: #a78bfa;
+    --bdr2:   rgba(255,255,255,0.13);
+
+    /* Acentos */
+    --teal:   #2dd4bf;   /* verde teal — principal */
+    --purple: #c4b5fd;   /* violeta más claro / suave */
     --amber:  #fbbf24;
     --red:    #f87171;
-    --green:  #34d399;
-    --text:   #e2e8f0;
-    --muted:  #64748b;
-    --dim:    #94a3b8;
+    --green:  #34d399;   /* verde conservado */
+
+    /* Texto — escala de blancos y grises claros */
+    --text:   #f1f5f9;   /* blanco suave — títulos y valores */
+    --text2:  #cbd5e1;   /* gris claro — texto secundario */
+    --dim:    #94a3b8;   /* gris medio — captions */
+    --muted:  #475569;   /* gris oscuro — labels */
 }
 
 html, body, .stApp,
@@ -97,7 +106,7 @@ html, body, .stApp,
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--dim);
     margin-bottom: 14px;
     display: flex;
     align-items: center;
@@ -125,7 +134,7 @@ html, body, .stApp,
     overflow: hidden;
     transition: border-color 0.2s, transform 0.15s;
 }
-.kpi:hover { border-color: var(--bdr2); transform: translateY(-1px); }
+.kpi:hover { border-color: var(--bdr2); transform: translateY(-1px); background: var(--bg3); }
 .kpi-accent {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -194,7 +203,7 @@ html, body, .stApp,
     font-size: 13px;
     color: var(--text);
 }
-.mkt-table tr:hover td { background: var(--bg3); }
+.mkt-table tr:hover td { background: var(--bg4); }
 .mkt-table tr:last-child td { border-bottom: none; }
 .cat-pill {
     display: inline-block;
