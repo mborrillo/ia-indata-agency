@@ -11,7 +11,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 # Cargar .env
-load_dotenv()
+load_dotenv(override=False)
 
 # Configuración de logging
 logging.basicConfig(
