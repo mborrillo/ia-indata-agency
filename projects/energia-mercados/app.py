@@ -25,7 +25,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 :root {
-    --bg:     #0c0e14;    #4a5065-2c303f-0c0e14
+    --bg:     #2c303f;    #4a5065-2c303f-0c0e14
     --bg2:    #12151f;
     --bg3:    #181c28;
     --bdr:    rgba(255,255,255,0.06);
@@ -448,10 +448,10 @@ with tab1:
             st.markdown('</div>', unsafe_allow_html=True)
 
             with st.expander("Ver tabla histórica completa"):
-                tabla = hist[["fecha","precio_medio","precio_min","precio_max","media_movil_7d"]].copy()
-                tabla = tabla.sort_values("fecha", ascending=False).reset_index(drop=True)
-                tabla.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d"]
-                st.dataframe(tabla, use_container_width=True, hide_index=True)
+                tabla_e = hist[["fecha","precio_medio","precio_min","precio_max","media_movil_7d"]].copy()
+                tabla_e = tabla_e.sort_values("fecha", ascending=False).reset_index(drop=True)
+                tabla_e.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d"]
+                st.dataframe(tabla_e, use_container_width=True, hide_index=True)
 
 # ════════════════════════════════════════════════════════════
 # TAB 2 — MERCADOS
@@ -597,25 +597,33 @@ with tab3:
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Tabla histórica EUR/USD
+        # Tabla histórica EUR/USD con variación
         if not hist_div.empty:
             with st.expander("Ver tabla histórica EUR/USD"):
-                tabla_div = hist_div[["fecha","tasa"]].copy()
-                tabla_div = tabla_div.sort_values("fecha", ascending=False).reset_index(drop=True)
-                tabla_div.columns = ["Fecha","EUR/USD"]
-                st.dataframe(tabla_div, use_container_width=True, hide_index=True)
+                td = hist_div[["fecha","tasa"]].copy()
+                td = td.sort_values("fecha", ascending=False).reset_index(drop=True)
+                td["variacion"] = td["tasa"].pct_change(-1) * 100
+                td["variacion"] = td["variacion"].apply(
+                    lambda x: f"{x:+.2f}%" if pd.notna(x) else "—"
+                )
+                td.columns = ["Fecha","EUR/USD","Variación %"]
+                st.dataframe(td, use_container_width=True, hide_index=True)
 
-        # Tabla histórica IPC (si hay datos)
+        # Tabla histórica IPC con variación
         hist_ipc = q("""
-            SELECT fecha, valor, unidad FROM memo.bronze_macro
+            SELECT fecha, valor FROM memo.bronze_macro
             WHERE indicador = 'IPC_GENERAL_ESP'
             ORDER BY fecha DESC
         """)
         if not hist_ipc.empty:
             with st.expander("Ver histórico IPC España"):
-                tabla_ipc = hist_ipc.copy()
-                tabla_ipc.columns = ["Fecha","Valor","Unidad"]
-                st.dataframe(tabla_ipc, use_container_width=True, hide_index=True)
+                ti = hist_ipc.copy()
+                ti["variacion"] = ti["valor"].pct_change(-1) * 100
+                ti["variacion"] = ti["variacion"].apply(
+                    lambda x: f"{x:+.2f}%" if pd.notna(x) else "—"
+                )
+                ti.columns = ["Fecha","IPC (var. anual %)","Variación vs anterior %"]
+                st.dataframe(ti, use_container_width=True, hide_index=True)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
