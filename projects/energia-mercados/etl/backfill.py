@@ -1,9 +1,9 @@
 """
-backfill.py — Carga histórica de los últimos 20 días
+backfill.py — Carga histórica de los últimos 30 días
 Ejecutar UNA VEZ manualmente para poblar el histórico.
 
 Uso:
-    python backfill.py           # últimos 20 días
+    python backfill.py           # últimos 30 días
     python backfill.py 30        # últimos N días
 """
 import os
@@ -28,7 +28,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 DB_URL = os.getenv("NEON_DATABASE_URL")
-DIAS   = int(sys.argv[1]) if len(sys.argv) > 1 else 20
+DIAS   = int(sys.argv[1]) if len(sys.argv) > 1 else 30
 
 
 def get_conn():
