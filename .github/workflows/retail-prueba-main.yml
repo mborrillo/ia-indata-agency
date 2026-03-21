@@ -26,6 +26,19 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      - name: Debug
+        run: |
+          python -c "
+      import os
+      from dotenv import load_dotenv
+      load_dotenv()
+      val = os.getenv('NEON_RETAIL_PRUEBA')
+      print('VALOR:', repr(val))
+      print('LONGITUD:', len(val) if val else 0)
+      "
+        env:
+          NEON_RETAIL_PRUEBA: ${{ secrets.NEON_RETAIL_PRUEBA }}
+
       - name: Ejecutar ETL
         env:
           NEON_RETAIL_PRUEBA: ${{ secrets.NEON_RETAIL_PRUEBA }}
