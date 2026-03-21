@@ -334,6 +334,43 @@ PLOTLY_LAYOUT = dict(
     ),
 )
 
+
+# ── Helper: colorear variación en tablas ─────────────────────────────────────
+def _color_var_html(val_str: str) -> str:
+    """Devuelve estilo inline según signo de la variación."""
+    if not isinstance(val_str, str) or val_str == "—":
+        return f'<span style="color:#c4b5fd">{val_str}</span>'
+    try:
+        v = float(val_str.replace("%","").replace("+",""))
+        if v > 0:   return f'<span style="color:#34d399;font-weight:600">{val_str}</span>'
+        if v < 0:   return f'<span style="color:#f87171;font-weight:600">{val_str}</span>'
+        return f'<span style="color:#c4b5fd">{val_str}</span>'
+    except:
+        return f'<span style="color:#c4b5fd">{val_str}</span>'
+
+def _render_table_html(df: "pd.DataFrame", col_var: str = "Variación %") -> str:
+    """Renderiza un DataFrame como tabla HTML con variación coloreada."""
+    cols = list(df.columns)
+    ths  = "".join(f"<th>{c}</th>" for c in cols)
+    rows = ""
+    for _, row in df.iterrows():
+        tds = ""
+        for c in cols:
+            val = row[c]
+            cell = str(val) if val is not None else "—"
+            if c == col_var:
+                tds += f"<td>{_color_var_html(cell)}</td>"
+            else:
+                tds += f"<td>{cell}</td>"
+        rows += f"<tr>{tds}</tr>"
+    return f"""
+    <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-top:8px">
+      <table class="mkt-table">
+        <thead><tr>{ths}</tr></thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>"""
+
 # ── Guard ─────────────────────────────────────────────────────────────────────
 if not DB_URL:
     st.error("⚠ NEON_DATABASE_URL no configurada")
@@ -447,11 +484,41 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
+            # Preparar columnas de período
+            hist_t = hist.copy()
+            hist_t["fecha"] = pd.to_datetime(hist_t["fecha"])
+            hist_t["YY-MM"] = hist_t["fecha"].dt.strftime("%Y-%m")
+            hist_t["YY-WW"] = hist_t["fecha"].dt.strftime("%Y-W%W")
+            hist_t["fecha"] = hist_t["fecha"].dt.date
+
             with st.expander("Ver tabla histórica completa"):
-                tabla_e = hist[["fecha","precio_medio","precio_min","precio_max","media_movil_7d"]].copy()
-                tabla_e = tabla_e.sort_values("fecha", ascending=False).reset_index(drop=True)
-                tabla_e.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d"]
-                st.dataframe(tabla_e, use_container_width=True, hide_index=True)
+                # Filtros
+                fc1, fc2 = st.columns(2)
+                meses_disp = sorted(hist_t["YY-MM"].unique(), reverse=True)
+                weeks_disp = sorted(hist_t["YY-WW"].unique(), reverse=True)
+                with fc1:
+                    meses_sel = st.multiselect("Filtrar por mes (YY-MM)",
+                        meses_disp, default=meses_disp, key="e_mes")
+                with fc2:
+                    weeks_sel = st.multiselect("Filtrar por semana (YY-WW)",
+                        weeks_disp, default=weeks_disp, key="e_wk")
+
+                mask = (
+                    hist_t["YY-MM"].isin(meses_sel) &
+                    hist_t["YY-WW"].isin(weeks_sel)
+                )
+                filt = hist_t[mask].sort_values("fecha", ascending=False).reset_index(drop=True)
+
+                # Calcular variación
+                filt_asc = filt.sort_values("fecha", ascending=True)
+                filt_asc["var"] = filt_asc["precio_medio"].pct_change() * 100
+                filt_asc["var"] = filt_asc["var"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
+                filt = filt_asc.sort_values("fecha", ascending=False).reset_index(drop=True)
+
+                tabla_e = filt[["fecha","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var"]].copy()
+                tabla_e.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
+                st.markdown(_render_table_html(tabla_e), unsafe_allow_html=True)
+                st.caption(f"{len(tabla_e)} registros mostrados")
 
 # ════════════════════════════════════════════════════════════
 # TAB 2 — MERCADOS
@@ -506,15 +573,17 @@ with tab2:
         rows_html = ""
         for _, row in df.sort_values("categoria").iterrows():
             var = row["variacion_p"]
-            var_class = "var-up" if var > 2 else ("var-down" if var < -2 else "var-flat")
-            var_arrow = "▲" if var > 2 else ("▼" if var < -2 else "—")
+            var_str = f"{var:+.2f}%"
+            if var > 2:   var_cell = f'<span style="color:#34d399;font-weight:600">▲ {abs(var):.2f}%</span>'
+            elif var < -2:var_cell = f'<span style="color:#f87171;font-weight:600">▼ {abs(var):.2f}%</span>'
+            else:          var_cell = f'<span style="color:#c4b5fd">— {abs(var):.2f}%</span>'
             cat_cls = f"cat-{row['categoria']}"
             rows_html += f"""
             <tr>
               <td><strong>{row['activo'].replace('_',' ')}</strong></td>
               <td><span class="cat-pill {cat_cls}">{row['categoria']}</span></td>
               <td class="price-mono">{row['precio_cierre']:,.4f}</td>
-              <td class="{var_class}">{var_arrow} {abs(var):.2f}%</td>
+              <td>{var_cell}</td>
               <td style="color:var(--muted);font-size:12px">{row['moneda']}</td>
             </tr>"""
 
@@ -582,9 +651,38 @@ with tab3:
         st.markdown(f'<div class="kpi-row kpi-2" style="max-width:620px">{cards_html}</div>', unsafe_allow_html=True)
 
     if not hist_div.empty:
-        hist_div["fecha"] = pd.to_datetime(hist_div["fecha"]).dt.date
+        hist_div["fecha"] = pd.to_datetime(hist_div["fecha"])
+        hist_div = hist_div.sort_values("fecha", ascending=True).reset_index(drop=True)
+        hist_div["variacion_p"] = hist_div["tasa"].pct_change() * 100
+
+        # Tarjeta variación media (igual que Mercados)
+        var_avg = hist_div["variacion_p"].mean()
+        n_sube  = (hist_div["variacion_p"] > 0).sum()
+        n_baja  = (hist_div["variacion_p"] < 0).sum()
+        color_avg = "#34d399" if var_avg >= 0 else "#f87171"
+        st.markdown(f"""
+        <div class="kpi-row kpi-3" style="max-width:720px;margin-bottom:20px">
+          <div class="kpi">
+            <div class="kpi-accent" style="background:var(--green)"></div>
+            <div class="kpi-label">Días al alza</div>
+            <div class="kpi-value">{n_sube}</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-accent" style="background:var(--red)"></div>
+            <div class="kpi-label">Días a la baja</div>
+            <div class="kpi-value">{n_baja}</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-accent" style="background:var(--purple)"></div>
+            <div class="kpi-label">Variación media</div>
+            <div class="kpi-value" style="font-size:24px;color:{color_avg}">{var_avg:+.3f}%</div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        hist_div["fecha_d"] = hist_div["fecha"].dt.date
         fig3 = go.Figure(go.Scatter(
-            x=hist_div["fecha"], y=hist_div["tasa"],
+            x=hist_div["fecha_d"], y=hist_div["tasa"],
             mode="lines+markers",
             line=dict(color="#a78bfa", width=2),
             marker=dict(size=5, color="#a78bfa"),
@@ -597,33 +695,41 @@ with tab3:
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Tabla histórica EUR/USD con variación
-        if not hist_div.empty:
-            with st.expander("Ver tabla histórica EUR/USD"):
-                td = hist_div[["fecha","tasa"]].copy()
-                td = td.sort_values("fecha", ascending=False).reset_index(drop=True)
-                td["variacion"] = td["tasa"].pct_change(-1) * 100
-                td["variacion"] = td["variacion"].apply(
-                    lambda x: f"{x:+.2f}%" if pd.notna(x) else "—"
-                )
-                td.columns = ["Fecha","EUR/USD","Variación %"]
-                st.dataframe(td, use_container_width=True, hide_index=True)
+        # Tabla EUR/USD con filtros YY-MM y YY-WW + variación coloreada
+        hist_div["YY-MM"] = hist_div["fecha"].dt.strftime("%Y-%m")
+        hist_div["YY-WW"] = hist_div["fecha"].dt.strftime("%Y-W%W")
+        with st.expander("Ver tabla histórica EUR/USD"):
+            mc1, mc2 = st.columns(2)
+            meses_m = sorted(hist_div["YY-MM"].unique(), reverse=True)
+            weeks_m = sorted(hist_div["YY-WW"].unique(), reverse=True)
+            with mc1:
+                meses_ms = st.multiselect("Filtrar por mes", meses_m, default=meses_m, key="m_mes")
+            with mc2:
+                weeks_ms = st.multiselect("Filtrar por semana", weeks_m, default=weeks_m, key="m_wk")
+            mask_m = hist_div["YY-MM"].isin(meses_ms) & hist_div["YY-WW"].isin(weeks_ms)
+            td = hist_div[mask_m].sort_values("fecha", ascending=False).reset_index(drop=True)
+            td["var_str"] = td["variacion_p"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
+            td_show = td[["fecha_d","tasa","var_str","YY-MM","YY-WW"]].copy()
+            td_show.columns = ["Fecha","EUR/USD","Variación %","Mes","Semana"]
+            st.markdown(_render_table_html(td_show), unsafe_allow_html=True)
+            st.caption(f"{len(td_show)} registros")
 
-        # Tabla histórica IPC con variación
+        # Tabla IPC
         hist_ipc = q("""
             SELECT fecha, valor FROM memo.bronze_macro
             WHERE indicador = 'IPC_GENERAL_ESP'
-            ORDER BY fecha DESC
+            ORDER BY fecha ASC
         """)
         if not hist_ipc.empty:
+            hist_ipc["fecha"] = pd.to_datetime(hist_ipc["fecha"])
+            hist_ipc["variacion_p"] = hist_ipc["valor"].pct_change() * 100
             with st.expander("Ver histórico IPC España"):
-                ti = hist_ipc.copy()
-                ti["variacion"] = ti["valor"].pct_change(-1) * 100
-                ti["variacion"] = ti["variacion"].apply(
-                    lambda x: f"{x:+.2f}%" if pd.notna(x) else "—"
-                )
-                ti.columns = ["Fecha","IPC (var. anual %)","Variación vs anterior %"]
-                st.dataframe(ti, use_container_width=True, hide_index=True)
+                ti = hist_ipc.sort_values("fecha", ascending=False).reset_index(drop=True)
+                ti["var_str"] = ti["variacion_p"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
+                ti_show = ti[["fecha","valor","var_str"]].copy()
+                ti_show["fecha"] = ti_show["fecha"].dt.strftime("%Y-%m")
+                ti_show.columns = ["Período","IPC var. anual %","Variación vs anterior %"]
+                st.markdown(_render_table_html(ti_show, "Variación vs anterior %"), unsafe_allow_html=True)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
