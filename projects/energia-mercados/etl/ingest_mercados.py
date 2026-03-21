@@ -34,7 +34,7 @@ ACTIVOS = {
     # Energía (coste directo para cualquier empresa)
     "Gas_Natural":   {"ticker": "NG=F",    "cat": "Energia"},
     "Brent":         {"ticker": "BZ=F",    "cat": "Energia"},
-    "Carbon":        {"ticker": "MTF=F",   "cat": "Energia"},
+    #"Carbon":        {"ticker": "MTF=F",   "cat": "Energia"},
     # Materias primas industriales
     "Cobre":         {"ticker": "HG=F",    "cat": "Industrial"},
     "Aluminio":      {"ticker": "ALI=F",   "cat": "Industrial"},
