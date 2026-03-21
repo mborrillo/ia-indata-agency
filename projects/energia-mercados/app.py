@@ -25,7 +25,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 :root {
-    --bg:     #4a5065;    #4a5065-2c303f-0c0e14
+    --bg:     #2c303f;    #4a5065-2c303f-0c0e14
     --bg2:    #12151f;
     --bg3:    #181c28;
     --bdr:    rgba(255,255,255,0.06);
