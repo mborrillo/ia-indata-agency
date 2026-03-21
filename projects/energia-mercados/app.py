@@ -25,28 +25,19 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 :root {
-    /* Jerarquía de fondos: más oscuro → más claro */
-    --bg:     #080a0f;   /* fondo base — casi negro azulado */
-    --bg2:    #0f1219;   /* cards y paneles — capa 1 */
-    --bg3:    #171b26;   /* hover, expanders — capa 2 */
-    --bg4:    #1f2433;   /* elementos activos — capa 3 */
-
-    /* Bordes progresivos */
+    --bg:     #2c303f;    #4a5065-2c303f-0c0e14
+    --bg2:    #12151f;
+    --bg3:    #181c28;
     --bdr:    rgba(255,255,255,0.06);
-    --bdr2:   rgba(255,255,255,0.13);
-
-    /* Acentos */
-    --teal:   #2dd4bf;   /* verde teal — principal */
-    --purple: #c4b5fd;   /* violeta más claro / suave */
+    --bdr2:   rgba(255,255,255,0.12);
+    --teal:   #2dd4bf;
+    --purple: #a78bfa;
     --amber:  #fbbf24;
     --red:    #f87171;
-    --green:  #34d399;   /* verde conservado */
-
-    /* Texto — escala de blancos y grises claros */
-    --text:   #f1f5f9;   /* blanco suave — títulos y valores */
-    --text2:  #cbd5e1;   /* gris claro — texto secundario */
-    --dim:    #94a3b8;   /* gris medio — captions */
-    --muted:  #475569;   /* gris oscuro — labels */
+    --green:  #34d399;
+    --text:   #e2e8f0;
+    --muted:  #64748b;
+    --dim:    #94a3b8;
 }
 
 html, body, .stApp,
@@ -106,7 +97,7 @@ html, body, .stApp,
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--dim);
+    color: var(--muted);
     margin-bottom: 14px;
     display: flex;
     align-items: center;
@@ -134,7 +125,7 @@ html, body, .stApp,
     overflow: hidden;
     transition: border-color 0.2s, transform 0.15s;
 }
-.kpi:hover { border-color: var(--bdr2); transform: translateY(-1px); background: var(--bg3); }
+.kpi:hover { border-color: var(--bdr2); transform: translateY(-1px); }
 .kpi-accent {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -203,7 +194,7 @@ html, body, .stApp,
     font-size: 13px;
     color: var(--text);
 }
-.mkt-table tr:hover td { background: var(--bg4); }
+.mkt-table tr:hover td { background: var(--bg3); }
 .mkt-table tr:last-child td { border-bottom: none; }
 .cat-pill {
     display: inline-block;
@@ -456,8 +447,11 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
-            with st.expander("Ver tabla histórica"):
-                st.dataframe(hist, use_container_width=True, hide_index=True)
+            with st.expander("Ver tabla histórica completa"):
+                tabla = hist[["fecha","precio_medio","precio_min","precio_max","media_movil_7d"]].copy()
+                tabla = tabla.sort_values("fecha", ascending=False).reset_index(drop=True)
+                tabla.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d"]
+                st.dataframe(tabla, use_container_width=True, hide_index=True)
 
 # ════════════════════════════════════════════════════════════
 # TAB 2 — MERCADOS
@@ -602,6 +596,26 @@ with tab3:
         st.markdown('<div class="chart-box"><div class="chart-title">EUR/USD histórico · BCE</div>', unsafe_allow_html=True)
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
+
+        # Tabla histórica EUR/USD
+        if not hist_div.empty:
+            with st.expander("Ver tabla histórica EUR/USD"):
+                tabla_div = hist_div[["fecha","tasa"]].copy()
+                tabla_div = tabla_div.sort_values("fecha", ascending=False).reset_index(drop=True)
+                tabla_div.columns = ["Fecha","EUR/USD"]
+                st.dataframe(tabla_div, use_container_width=True, hide_index=True)
+
+        # Tabla histórica IPC (si hay datos)
+        hist_ipc = q("""
+            SELECT fecha, valor, unidad FROM memo.bronze_macro
+            WHERE indicador = 'IPC_GENERAL_ESP'
+            ORDER BY fecha DESC
+        """)
+        if not hist_ipc.empty:
+            with st.expander("Ver histórico IPC España"):
+                tabla_ipc = hist_ipc.copy()
+                tabla_ipc.columns = ["Fecha","Valor","Unidad"]
+                st.dataframe(tabla_ipc, use_container_width=True, hide_index=True)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
