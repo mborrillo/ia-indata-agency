@@ -25,7 +25,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 :root {
-    --bg:     #0c0e14;    #4a5065-2c303f-0c0e14
+    --bg:     #2c303f;    #4a5065-2c303f-0c0e14
     --bg2:    #12151f;
     --bg3:    #181c28;
     --bdr:    rgba(255,255,255,0.06);
@@ -237,13 +237,59 @@ html, body, .stApp,
 }
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
     background: var(--bg3) !important;
-    color: var(--teal) !important;
-    border: 1px solid var(--bdr2) !important;
+    color: var(--purple) !important;
+    border: 1px solid rgba(196,181,253,0.2) !important;
 }
 [data-testid="stTabs"] [role="tab"]:hover:not([aria-selected="true"]) {
     color: var(--text) !important;
     background: rgba(255,255,255,0.04) !important;
 }
+
+/* ── Multiselect & Selectbox — violeta ── */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+    background-color: rgba(196,181,253,0.15) !important;
+    border: 1px solid rgba(196,181,253,0.35) !important;
+    color: #c4b5fd !important;
+    border-radius: 6px !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span { color: #c4b5fd !important; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] [aria-label="Remove"] { color: #c4b5fd !important; }
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child {
+    background: var(--bg2) !important;
+    border: 1px solid var(--bdr2) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child:focus-within {
+    border-color: rgba(196,181,253,0.5) !important;
+    box-shadow: 0 0 0 2px rgba(196,181,253,0.12) !important;
+}
+[data-baseweb="select"] [aria-selected="true"],
+[data-baseweb="menu"] [aria-selected="true"] {
+    background-color: rgba(196,181,253,0.12) !important;
+    color: #c4b5fd !important;
+}
+[data-baseweb="select"] > div:first-child,
+[data-testid="stSelectbox"] > div > div {
+    background: var(--bg2) !important;
+    border: 1px solid var(--bdr2) !important;
+    border-radius: 8px !important;
+    color: var(--text) !important;
+}
+[data-baseweb="select"] > div:first-child:focus-within {
+    border-color: rgba(196,181,253,0.5) !important;
+    box-shadow: 0 0 0 2px rgba(196,181,253,0.12) !important;
+}
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background: var(--bg3) !important;
+    border: 1px solid var(--bdr2) !important;
+    border-radius: 8px !important;
+}
+[data-baseweb="menu"] li { color: var(--text) !important; }
+[data-baseweb="menu"] li:hover { background: rgba(196,181,253,0.1) !important; color: #c4b5fd !important; }
+
+/* ── Expander — violeta al hover ── */
+[data-testid="stExpander"] summary:hover { color: #c4b5fd !important; }
+[data-testid="stExpander"] summary svg { color: inherit !important; }
 
 /* ── Chart containers ── */
 .chart-box {
@@ -498,14 +544,14 @@ with tab1:
                 weeks_disp = sorted(hist_t["YY-WW"].unique(), reverse=True)
                 with fc1:
                     meses_sel = st.multiselect("Filtrar por mes (YY-MM)",
-                        meses_disp, default=meses_disp, key="e_mes")
+                        meses_disp, default=[], key="e_mes")
                 with fc2:
                     weeks_sel = st.multiselect("Filtrar por semana (YY-WW)",
-                        weeks_disp, default=weeks_disp, key="e_wk")
+                        weeks_disp, default=[], key="e_wk")
 
                 mask = (
-                    hist_t["YY-MM"].isin(meses_sel) &
-                    hist_t["YY-WW"].isin(weeks_sel)
+                    (hist_t["YY-MM"].isin(meses_sel) if meses_sel else pd.Series(True, index=hist_t.index)) &
+                    (hist_t["YY-WW"].isin(weeks_sel) if weeks_sel else pd.Series(True, index=hist_t.index))
                 )
                 filt = hist_t[mask].sort_values("fecha", ascending=False).reset_index(drop=True)
 
@@ -703,10 +749,13 @@ with tab3:
             meses_m = sorted(hist_div["YY-MM"].unique(), reverse=True)
             weeks_m = sorted(hist_div["YY-WW"].unique(), reverse=True)
             with mc1:
-                meses_ms = st.multiselect("Filtrar por mes", meses_m, default=meses_m, key="m_mes")
+                meses_ms = st.multiselect("Filtrar por mes", meses_m, default=[], key="m_mes")
             with mc2:
-                weeks_ms = st.multiselect("Filtrar por semana", weeks_m, default=weeks_m, key="m_wk")
-            mask_m = hist_div["YY-MM"].isin(meses_ms) & hist_div["YY-WW"].isin(weeks_ms)
+                weeks_ms = st.multiselect("Filtrar por semana", weeks_m, default=[], key="m_wk")
+            mask_m = (
+                (hist_div["YY-MM"].isin(meses_ms) if meses_ms else pd.Series(True, index=hist_div.index)) &
+                (hist_div["YY-WW"].isin(weeks_ms) if weeks_ms else pd.Series(True, index=hist_div.index))
+            )
             td = hist_div[mask_m].sort_values("fecha", ascending=False).reset_index(drop=True)
             td["var_str"] = td["variacion_p"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
             td_show = td[["fecha_d","tasa","var_str","YY-MM","YY-WW"]].copy()
