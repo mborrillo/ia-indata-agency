@@ -1,13 +1,10 @@
 """
 ETL: IPC General + IPC Alimentación (INE) → hosteleria.bronze_ipc
-También usable para actualizar memo.bronze_macro (MEMO genérico).
-
 Series INE:
   IPC General España:        IPC206449
-  IPC Alimentación España:   IPC206450  ← nueva, no estaba en MEMO genérico
-
-Frecuencia: mensual. El script detecta si ya hay dato del mes actual
-y no duplica.
+  IPC Alimentación España:   IPC206450
+Frecuencia: mensual.
+Fix: manejo robusto del formato de respuesta del INE (puede variar).
 """
 import os, sys, logging, requests
 from datetime import datetime
@@ -37,9 +34,9 @@ def get_engine():
                          connect_args={"connect_timeout": 10})
 
 
-def parse_fecha(nombre_periodo: str) -> str:
-    """Convierte 'Marzo 2026' → '2026-03-01'"""
-    partes = nombre_periodo.strip().split()
+def parse_fecha(nombre: str) -> str:
+    """'Marzo 2026' → '2026-03-01'"""
+    partes = (nombre or "").strip().split()
     if len(partes) == 2:
         mes  = MESES.get(partes[0], 1)
         anio = int(partes[1])
@@ -47,39 +44,91 @@ def parse_fecha(nombre_periodo: str) -> str:
     return datetime.now().strftime("%Y-%m-01")
 
 
-def extract_serie(indicador: str, serie_id: str) -> dict | None:
-    """Descarga el último dato de una serie INE."""
-    url = f"https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/{serie_id}?nult=1"
-    try:
-        r = requests.get(url, timeout=15)
-        r.raise_for_status()
-        datos = r.json()
-        if not datos:
-            log.warning("INE %s — lista vacía", indicador)
-            return None
-        ultimo = datos[0]
-        valor  = ultimo.get("Valor")
-        if valor is None:
-            log.warning("INE %s — valor nulo", indicador)
-            return None
-        fecha  = parse_fecha(ultimo.get("NombrePeriodo", ""))
-        log.info("INE %s — %s: %.2f%%", indicador, fecha, float(valor))
-        return {
-            "fecha":     fecha,
-            "indicador": indicador,
-            "valor":     round(float(valor), 2),
-            "unidad":    "tasa_variacion_anual_%",
-        }
-    except Exception as e:
-        log.error("Error INE %s: %s", indicador, e)
-        return None
+def extract_ine(indicador: str, serie_id: str) -> dict | None:
+    """
+    Descarga último dato de una serie INE con manejo robusto de respuesta.
+    El INE a veces devuelve la serie completa, a veces solo el último dato.
+    """
+    urls_a_probar = [
+        f"https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/{serie_id}?nult=1",
+        f"https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/{serie_id}?nult=2",
+    ]
+
+    for url in urls_a_probar:
+        try:
+            r = requests.get(url, timeout=20,
+                             headers={"Accept": "application/json"})
+
+            # El INE puede devolver 200 con body vacío o con 0
+            if r.status_code != 200:
+                log.warning("INE %s HTTP %d", indicador, r.status_code)
+                continue
+
+            # Intentar parsear JSON de forma segura
+            try:
+                contenido = r.json()
+            except Exception:
+                log.warning("INE %s — respuesta no es JSON", indicador)
+                continue
+
+            # La respuesta puede ser: lista, dict, int, None
+            if not contenido:
+                log.warning("INE %s — respuesta vacía", indicador)
+                continue
+
+            # Si es lista, tomar el primer elemento
+            if isinstance(contenido, list):
+                datos = contenido
+            elif isinstance(contenido, dict):
+                # A veces el INE envuelve en {"Data": [...]}
+                datos = contenido.get("Data", contenido.get("data", [contenido]))
+            else:
+                log.warning("INE %s — formato inesperado: %s", indicador, type(contenido))
+                continue
+
+            if not datos:
+                continue
+
+            # Buscar el primer elemento con Valor no nulo
+            for item in datos:
+                if not isinstance(item, dict):
+                    continue
+                valor_raw = item.get("Valor") or item.get("valor")
+                if valor_raw is None:
+                    continue
+                try:
+                    valor = float(str(valor_raw).replace(",", "."))
+                except (ValueError, TypeError):
+                    continue
+
+                nombre_periodo = item.get("NombrePeriodo") or item.get("nombre_periodo", "")
+                fecha = parse_fecha(nombre_periodo)
+
+                log.info("INE %s — %s: %.2f%%", indicador, fecha, valor)
+                return {
+                    "fecha":     fecha,
+                    "indicador": indicador,
+                    "valor":     round(valor, 2),
+                    "unidad":    "tasa_variacion_anual_%",
+                }
+
+        except requests.exceptions.RequestException as e:
+            log.warning("INE %s request error: %s", indicador, e)
+            continue
+        except Exception as e:
+            log.warning("INE %s error inesperado: %s", indicador, e)
+            continue
+
+    log.error("INE %s — no se pudo obtener dato de ninguna URL", indicador)
+    return None
 
 
-def already_loaded(tabla: str, schema: str, fecha: str, indicador: str) -> bool:
+def already_loaded(fecha: str, indicador: str) -> bool:
     try:
         with get_engine().connect() as conn:
             row = conn.execute(text(
-                f"SELECT 1 FROM {schema}.{tabla} WHERE fecha=:f AND indicador=:i"),
+                "SELECT 1 FROM hosteleria.bronze_ipc "
+                "WHERE fecha=:f AND indicador=:i"),
                 {"f": fecha, "i": indicador}
             ).fetchone()
         return row is not None
@@ -87,44 +136,33 @@ def already_loaded(tabla: str, schema: str, fecha: str, indicador: str) -> bool:
         return False
 
 
-def load(reg: dict, tabla: str, schema: str):
-    sql = f"""
-        INSERT INTO {schema}.{tabla} (fecha, indicador, valor, unidad)
+def load(reg: dict):
+    sql = """
+        INSERT INTO hosteleria.bronze_ipc (fecha, indicador, valor, unidad)
         VALUES (:fecha, :indicador, :valor, :unidad)
         ON CONFLICT (fecha, indicador) DO UPDATE SET valor = EXCLUDED.valor
     """
     with get_engine().begin() as conn:
         conn.execute(text(sql), reg)
-    log.info("✓ %s.%s → %s %s: %.2f%%",
-             schema, tabla, reg["indicador"], reg["fecha"], reg["valor"])
+    log.info("✓ %s %s: %.2f%%", reg["indicador"], reg["fecha"], reg["valor"])
 
 
 if __name__ == "__main__":
     if not DB_URL:
         log.error("NEON_DATABASE_URL no definida"); sys.exit(1)
 
-    log.info("=== ETL IPC (General + Alimentación) ===")
+    log.info("=== ETL IPC General + Alimentación ===")
     cargados = 0
 
     for indicador, serie_id in SERIES_INE.items():
-        reg = extract_serie(indicador, serie_id)
+        reg = extract_ine(indicador, serie_id)
         if not reg:
+            log.warning("%s — sin dato disponible este mes", indicador)
             continue
+        if already_loaded(reg["fecha"], reg["indicador"]):
+            log.info("%s %s ya existe. Saltando.", indicador, reg["fecha"])
+            continue
+        load(reg)
+        cargados += 1
 
-        # Cargar en hosteleria.bronze_ipc (este proyecto)
-        if not already_loaded("bronze_ipc", "hosteleria", reg["fecha"], reg["indicador"]):
-            load(reg, "bronze_ipc", "hosteleria")
-            cargados += 1
-        else:
-            log.info("Ya existe %s %s en hosteleria. Saltando.", indicador, reg["fecha"])
-
-        # Cargar también en memo.bronze_macro (MEMO genérico) si existe
-        # Esto mantiene MEMO genérico actualizado con ambos IPCs
-        try:
-            if not already_loaded("bronze_macro", "memo", reg["fecha"], reg["indicador"]):
-                load(reg, "bronze_macro", "memo")
-                log.info("  → También actualizado en memo.bronze_macro")
-        except Exception:
-            log.warning("  → memo.bronze_macro no disponible (distinto proyecto Neon)")
-
-    log.info("=== IPC completado — %d registros cargados ===", cargados)
+    log.info("=== IPC completado — %d registros nuevos ===", cargados)

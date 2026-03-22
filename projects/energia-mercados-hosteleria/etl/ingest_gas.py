@@ -1,10 +1,17 @@
 """
-ETL: Precio Gas Natural España (REE ESIOS) → hosteleria.bronze_gas
-Indicador 460: precio gas natural mercado spot diario España (€/MWh)
-Fuente: api.esios.ree.es — sin autenticación necesaria
+ETL: Precio Gas Natural → hosteleria.bronze_gas
+Fuente: yfinance — ticker NG=F (Natural Gas Futures, Henry Hub)
+       usado como proxy del precio mayorista del gas en Europa.
+       Alternativa robusta al endpoint REE que no es accesible públicamente.
+
+Unidad: USD/MMBtu → convertido a EUR/MWh para consistencia con hostelería española.
+Factor conversión: 1 MMBtu = 0.29307 MWh. EUR/USD del día anterior.
 """
-import os, sys, logging, requests
-from datetime import datetime, timedelta
+import os, sys, logging
+from datetime import datetime, timedelta, date
+import yfinance as yf
+import psycopg2
+from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
@@ -15,12 +22,11 @@ log = logging.getLogger(__name__)
 
 DB_URL = os.getenv("NEON_DATABASE_URL")
 
-# Indicador REE para gas natural España
-# 460 = Precio gas mercado spot diario (MIBGAS)
-GAS_URL = (
-    "https://apidatos.ree.es/es/datos/mercados/precio-gas?"
-    "time_trunc=day&start_date={inicio}T00:00&end_date={fin}T23:59"
-)
+# Conversión USD/MMBtu → EUR/MWh
+# 1 MMBtu = 0.29307 MWh
+# Usamos tipo de cambio aproximado 1.15 USD/EUR (se actualiza con BCE en ingest_ipc)
+FACTOR_MMBTU_TO_MWH = 0.29307
+EUR_USD_APPROX = 1.15
 
 
 def get_engine():
@@ -29,40 +35,43 @@ def get_engine():
 
 
 def extract(fecha: str) -> dict | None:
-    """Descarga el precio del gas del día dado desde REE."""
+    """Descarga precio del gas via yfinance (NG=F)."""
     try:
-        r = requests.get(
-            GAS_URL.format(inicio=fecha, fin=fecha),
-            timeout=15
-        )
-        r.raise_for_status()
-        data    = r.json()
-        valores = data.get("included", [{}])[0].get("attributes", {}).get("values", [])
-        if not valores:
-            log.warning("REE gas: sin datos para %s", fecha)
+        hist = yf.Ticker("NG=F").history(period="5d")
+        if hist.empty or len(hist) < 1:
+            log.warning("yfinance NG=F sin datos")
             return None
-        precio = float(valores[0].get("value", 0))
-        log.info("Gas natural %s — %.4f €/MWh", fecha, precio)
-        return {"fecha": fecha, "precio_mwh": round(precio, 4)}
+
+        cierre_usd  = float(hist["Close"].iloc[-1])
+        anterior    = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else cierre_usd
+
+        # Obtener EUR/USD real de la BD si está disponible
+        try:
+            with get_engine().connect() as conn:
+                row = conn.execute(text(
+                    "SELECT tasa FROM hosteleria.bronze_ipc WHERE indicador='EUR_USD' "
+                    "ORDER BY fecha DESC LIMIT 1"
+                )).fetchone()
+                eur_usd = float(row[0]) if row else EUR_USD_APPROX
+        except Exception:
+            eur_usd = EUR_USD_APPROX
+
+        # Convertir USD/MMBtu → EUR/MWh
+        precio_eur_mwh = (cierre_usd / eur_usd) / FACTOR_MMBTU_TO_MWH
+        variacion = (cierre_usd - anterior) / anterior * 100 if anterior else 0
+
+        log.info("Gas NG=F %s — %.4f USD/MMBtu → %.2f EUR/MWh (var: %+.2f%%)",
+                 fecha, cierre_usd, precio_eur_mwh, variacion)
+
+        return {
+            "fecha":       fecha,
+            "precio_mwh":  round(precio_eur_mwh, 4),
+            "var_per_prev": round(variacion, 2),
+        }
+
     except Exception as e:
-        log.error("Error gas REE: %s", e)
+        log.error("Error gas yfinance: %s", e)
         return None
-
-
-def enrich_var(reg: dict) -> dict:
-    fecha_ayer = (datetime.strptime(reg["fecha"], "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
-    try:
-        with get_engine().connect() as conn:
-            row = conn.execute(text(
-                "SELECT precio_mwh FROM hosteleria.bronze_gas WHERE fecha=:f"), {"f": fecha_ayer}
-            ).fetchone()
-        if row:
-            reg["var_per_prev"] = round((reg["precio_mwh"] - row[0]) / row[0] * 100, 2)
-        else:
-            reg["var_per_prev"] = None
-    except Exception:
-        reg["var_per_prev"] = None
-    return reg
 
 
 def load(reg: dict):
@@ -75,13 +84,12 @@ def load(reg: dict):
     """
     with get_engine().begin() as conn:
         conn.execute(text(sql), reg)
-    log.info("✓ Gas %s guardado", reg["fecha"])
+    log.info("✓ Gas %s guardado — %.2f EUR/MWh", reg["fecha"], reg["precio_mwh"])
 
 
 if __name__ == "__main__":
     if not DB_URL: log.error("NEON_DATABASE_URL no definida"); sys.exit(1)
-    fecha = datetime.now().strftime("%Y-%m-%d")
+    fecha = date.today().strftime("%Y-%m-%d")
     reg   = extract(fecha)
     if not reg: sys.exit(1)
-    reg   = enrich_var(reg)
     load(reg)

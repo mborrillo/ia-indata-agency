@@ -1,16 +1,14 @@
 """
 ETL: Precio Aceite de Oliva Virgen Extra (AOVE) España → hosteleria.bronze_aceite
-Fuente: MAPA (Ministerio de Agricultura) — informe semanal de precios en origen
-URL: https://www.mapa.gob.es/es/agricultura/temas/producciones-agricolas/aceite-oliva/
+Fuentes en cascada (de más a menos fiable):
+  1. oleista.com — agrega datos de fuentes públicas, actualización diaria
+  2. precioaceitedeoliva.net — datos de Infaoliva y Junta de Andalucía
+  3. MAPA API observable — datos oficiales semanales del Ministerio
 
-Estrategia: el MAPA publica los precios semanales del mercado nacional en su web.
-Usamos la API del Observatorio de Precios del MAPA cuando está disponible,
-y como fallback el precio de referencia del pool de operadores (POOLred via Infaoliva).
-
-Nota: el precio es €/kg en origen España — NO el futuro de aceite de soja de Chicago.
-Esta distinción es crítica para que el dato sea útil para un hostelero español.
+Precio: €/kg en origen España (NO futuros de soja de Chicago)
+Frecuencia: semanal (se ejecuta todos los días pero solo carga si hay dato nuevo)
 """
-import os, sys, logging, requests
+import os, sys, logging, re, requests
 from datetime import datetime, date, timedelta
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
@@ -21,19 +19,16 @@ logging.basicConfig(level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 log = logging.getLogger(__name__)
 
-DB_URL = os.getenv("NEON_DATABASE_URL")
+DB_URL  = os.getenv("NEON_DATABASE_URL")
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "es-ES,es;q=0.9",
+}
 
-# Fuente 1: API MAPA — Observatorio de precios
-MAPA_URL = (
-    "https://www.mapa.gob.es/app/vocweb/api/indicadores?"
-    "categoria=ACEITE_OLIVA&periodo=SEMANAL&nult=1"
-)
-
-# Fuente 2: Infaoliva (fallback) — precios diarios del sector
-INFAOLIVA_URL = "https://www.infaoliva.com/cotizaciones"
-
-# Fuente 3: POOLred — sistema oficial del sector oleícola
-POOLRED_URL = "https://www.poolred.com/cotizaciones/cotizacion-diaria/"
+PRECIO_MIN, PRECIO_MAX = 1.5, 15.0  # €/kg rango válido AOVE
 
 
 def get_engine():
@@ -41,111 +36,135 @@ def get_engine():
                          connect_args={"connect_timeout": 10})
 
 
-def extract_mapa() -> dict | None:
-    """Intenta obtener precio del MAPA via API oficial."""
-    try:
-        r = requests.get(MAPA_URL, timeout=15,
-                         headers={"Accept": "application/json"})
-        if r.status_code != 200:
-            return None
-        data = r.json()
-        if not data:
-            return None
-        ultimo = data[0] if isinstance(data, list) else data
-        precio = float(ultimo.get("valor", 0) or ultimo.get("precio", 0))
-        if precio <= 0:
-            return None
-        log.info("MAPA API — AOVE: %.3f €/kg", precio)
-        return {
-            "fecha":    date.today().strftime("%Y-%m-%d"),
-            "tipo":     "AOVE",
-            "precio_kg": round(precio, 4),
-            "fuente":   "MAPA_API",
-        }
-    except Exception as e:
-        log.warning("MAPA API no disponible: %s", e)
-        return None
+def precio_valido(p: float) -> bool:
+    return PRECIO_MIN < p < PRECIO_MAX
 
 
-def extract_poolred() -> dict | None:
-    """Scraping de POOLred — fuente oficial del sector oleícola español."""
+def extract_oleista() -> dict | None:
+    """
+    oleista.com agrega datos de Infaoliva, Junta de Andalucía y MAPA.
+    Actualiza diariamente con datos de mercado en origen.
+    """
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(POOLRED_URL, timeout=15, headers=headers)
+        r = requests.get("https://oleista.com/es/precios/espana",
+                         headers=HEADERS, timeout=20)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
 
-        # Buscar precio AOVE en la tabla de cotizaciones
-        for row in soup.find_all("tr"):
-            cells = row.find_all("td")
-            if len(cells) >= 2:
-                label = cells[0].get_text(strip=True).lower()
-                if "virgen extra" in label or "aove" in label:
-                    precio_txt = cells[1].get_text(strip=True)
-                    precio_txt = precio_txt.replace(",", ".").replace("€", "").strip()
-                    try:
-                        precio = float(precio_txt)
-                        if 2.0 < precio < 12.0:  # rango razonable €/kg
-                            log.info("POOLred — AOVE: %.3f €/kg", precio)
-                            return {
-                                "fecha":     date.today().strftime("%Y-%m-%d"),
-                                "tipo":      "AOVE",
-                                "precio_kg": round(precio, 4),
-                                "fuente":    "POOLred",
-                            }
-                    except ValueError:
-                        continue
+        # Buscar precio AOVE — oleista muestra tabla con categorías
+        texto = soup.get_text(" ", strip=True)
+
+        # Patrones de precio en €/kg o €/100kg
+        # "Virgen Extra" seguido de precio
+        patrones = [
+            r'[Vv]irgen [Ee]xtra[^\d]*(\d+[.,]\d{2,3})',
+            r'AOVE[^\d]*(\d+[.,]\d{2,3})',
+            r'(\d+[.,]\d{2,3})\s*€/kg',
+        ]
+        for patron in patrones:
+            matches = re.findall(patron, texto)
+            for m in matches:
+                precio = float(m.replace(",", "."))
+                # Si viene en €/100kg, convertir
+                if precio > 100:
+                    precio = precio / 100
+                if precio_valido(precio):
+                    log.info("oleista.com — AOVE: %.3f €/kg", precio)
+                    return {
+                        "tipo":     "AOVE",
+                        "precio_kg": round(precio, 4),
+                        "fuente":   "oleista.com",
+                    }
         return None
     except Exception as e:
-        log.warning("POOLred no disponible: %s", e)
+        log.warning("oleista.com no disponible: %s", e)
         return None
 
 
-def extract_infaoliva() -> dict | None:
-    """Scraping de Infaoliva como último fallback."""
+def extract_precioaceitedeoliva() -> dict | None:
+    """
+    precioaceitedeoliva.net — datos de Infaoliva y Junta de Andalucía.
+    """
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(INFAOLIVA_URL, timeout=15, headers=headers)
+        r = requests.get("https://precioaceitedeoliva.net/",
+                         headers=HEADERS, timeout=20)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
+        texto = soup.get_text(" ", strip=True)
 
-        # Buscar el precio AOVE en la página
-        for elem in soup.find_all(["td", "span", "div"]):
-            txt = elem.get_text(strip=True).replace(",", ".")
-            if "virgen extra" in txt.lower():
-                # Buscar el número más cercano que sea un precio razonable
-                import re
-                nums = re.findall(r'\d+\.\d{2,3}', txt)
-                for n in nums:
-                    precio = float(n)
-                    if 2.0 < precio < 12.0:
-                        log.info("Infaoliva — AOVE: %.3f €/kg", precio)
-                        return {
-                            "fecha":     date.today().strftime("%Y-%m-%d"),
-                            "tipo":      "AOVE",
-                            "precio_kg": round(precio, 4),
-                            "fuente":    "Infaoliva",
-                        }
+        # Buscar precio virgen extra
+        patrones = [
+            r'[Vv]irgen [Ee]xtra[^\d]{0,30}(\d+[.,]\d{2,3})',
+            r'(\d+[.,]\d{2,3})\s*€/(?:kg|Kg)',
+        ]
+        for patron in patrones:
+            matches = re.findall(patron, texto[:3000])  # solo primeros 3000 chars
+            for m in matches:
+                precio = float(m.replace(",", "."))
+                if precio > 100:
+                    precio = precio / 100
+                if precio_valido(precio):
+                    log.info("precioaceitedeoliva.net — AOVE: %.3f €/kg", precio)
+                    return {
+                        "tipo":     "AOVE",
+                        "precio_kg": round(precio, 4),
+                        "fuente":   "precioaceitedeoliva.net",
+                    }
         return None
     except Exception as e:
-        log.warning("Infaoliva no disponible: %s", e)
+        log.warning("precioaceitedeoliva.net no disponible: %s", e)
+        return None
+
+
+def extract_infaoliva_home() -> dict | None:
+    """
+    Infaoliva homepage — muestra precios diarios actualizados.
+    URL correcta: https://www.infaoliva.com/ (no /cotizaciones)
+    """
+    try:
+        r = requests.get("https://www.infaoliva.com/",
+                         headers=HEADERS, timeout=20)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "html.parser")
+        texto = soup.get_text(" ", strip=True)
+
+        patrones = [
+            r'[Vv]irgen [Ee]xtra[^\d]{0,50}(\d+[.,]\d{2,3})',
+            r'AOVE[^\d]{0,30}(\d+[.,]\d{2,3})',
+        ]
+        for patron in patrones:
+            matches = re.findall(patron, texto[:5000])
+            for m in matches:
+                precio = float(m.replace(",", "."))
+                if precio > 100:
+                    precio = precio / 100
+                if precio_valido(precio):
+                    log.info("infaoliva.com — AOVE: %.3f €/kg", precio)
+                    return {
+                        "tipo":     "AOVE",
+                        "precio_kg": round(precio, 4),
+                        "fuente":   "infaoliva.com",
+                    }
+        return None
+    except Exception as e:
+        log.warning("infaoliva.com no disponible: %s", e)
         return None
 
 
 def already_loaded(fecha: str) -> bool:
-    """Evita duplicar si ya tenemos dato esta semana."""
     try:
         with get_engine().connect() as conn:
             row = conn.execute(text(
-                "SELECT 1 FROM hosteleria.bronze_aceite WHERE fecha=:f AND tipo='AOVE'"),
-                {"f": fecha}
+                "SELECT 1 FROM hosteleria.bronze_aceite "
+                "WHERE fecha=:f AND tipo='AOVE'"), {"f": fecha}
             ).fetchone()
         return row is not None
     except Exception:
         return False
 
 
-def load(reg: dict):
+def load(reg: dict, fecha: str):
+    reg["fecha"] = fecha
     sql = """
         INSERT INTO hosteleria.bronze_aceite (fecha, tipo, precio_kg, fuente)
         VALUES (:fecha, :tipo, :precio_kg, :fuente)
@@ -156,35 +175,30 @@ def load(reg: dict):
     with get_engine().begin() as conn:
         conn.execute(text(sql), reg)
     log.info("✓ Aceite AOVE %s — %.3f €/kg (%s)",
-             reg["fecha"], reg["precio_kg"], reg["fuente"])
+             fecha, reg["precio_kg"], reg["fuente"])
 
 
 if __name__ == "__main__":
     if not DB_URL:
         log.error("NEON_DATABASE_URL no definida"); sys.exit(1)
 
-    fecha = date.today().strftime("%Y-%m-%d")
+    # Obtener el lunes de esta semana (datos son semanales)
+    hoy   = date.today()
+    lunes = (hoy - timedelta(days=hoy.weekday())).strftime("%Y-%m-%d")
 
-    # Solo ejecutar una vez por semana (lunes) para datos semanales
-    if date.today().weekday() != 0:
-        log.info("Aceite: solo se actualiza los lunes (datos semanales)")
-        # Aun así cargamos si no hay dato de esta semana
-        lunes = (date.today() - timedelta(days=date.today().weekday())).strftime("%Y-%m-%d")
-        if already_loaded(lunes):
-            log.info("Ya hay dato de aceite para esta semana. Saltando.")
-            sys.exit(0)
-        fecha = lunes
-
-    if already_loaded(fecha):
-        log.info("Ya hay dato de aceite para %s. Saltando.", fecha)
+    if already_loaded(lunes):
+        log.info("Aceite AOVE ya cargado para semana del %s. Saltando.", lunes)
         sys.exit(0)
 
+    log.info("=== ETL Aceite AOVE — semana del %s ===", lunes)
+
     # Intentar fuentes en cascada
-    reg = extract_mapa() or extract_poolred() or extract_infaoliva()
+    reg = (extract_oleista() or
+           extract_precioaceitedeoliva() or
+           extract_infaoliva_home())
 
     if not reg:
-        log.error("No se pudo obtener precio del aceite de ninguna fuente")
+        log.error("Sin datos de aceite en ninguna fuente disponible")
         sys.exit(1)
 
-    reg["fecha"] = fecha
-    load(reg)
+    load(reg, lunes)
