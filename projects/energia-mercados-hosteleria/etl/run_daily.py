@@ -1,5 +1,5 @@
 """
-run_daily.py — Orquestador ETL diario MEMO Hostelería
+run_daily.py — Orquestador ETL_diario_MEMO_Hostelería
 Ejecuta los 4 scripts en secuencia. Si uno falla, los demás siguen.
 GitHub Actions llama a este archivo cada día laborable.
 """
