@@ -21,4 +21,4 @@ jobs:
           NEON_DATABASE_URL: ${{ secrets.HOSTELERIA_NEON_URL }}
         run: |
           cd projects/energia-mercados-hosteleria
-          python etl/backfill_hosteleria.py 20
+          python etl/backfill.py 20
