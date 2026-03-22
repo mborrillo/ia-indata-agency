@@ -226,4 +226,3 @@ Puedes usar estos proyectos como base para nuevos sectores:
 |----------|---------------|
 | `energia-mercados` | PVPC, Yahoo Finance, BCE, IPC — cualquier proyecto que necesite datos macro |
 | `energia-mercados-hosteleria` | PVPC + gas + aceite + IPC alimentación — sectores con costes energéticos |
-| `retail-prueba` | ETL desde CSV, gestión de inventarios, alertas de stock |
