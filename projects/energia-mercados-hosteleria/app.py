@@ -248,20 +248,25 @@ with tab1:
 
         if not hora.empty:
             h = hora.iloc[0]
-            ahorro = float(h.get("ahorro_potencial_pct") or 0)
+            ahorro_pct  = float(h.get("ahorro_potencial_pct") or 0)
+            precio_min_h = float(h.get("precio_en_mejor_hora") or 0)
+            precio_max_h = float(h.get("precio_en_peor_hora") or 0)
+            # Ejemplo real: 10 kW durante 4 horas = 40 kWh consumo típico cocina
+            kwh_ejemplo  = 40
+            ahorro_euros = (precio_max_h - precio_min_h) * kwh_ejemplo
             st.markdown(f"""
             <div class="krow k2" style="max-width:500px;margin-top:16px">
               <div class="kpi">
                 <div class="kacc" style="background:var(--purple)"></div>
                 <div class="klbl">Mejor franja para cocinar</div>
                 <div class="kval">{h.get('franja','—')}</div>
-                <div class="kdelta ok">Hora {int(h['mejor_hora'])}:00 — {float(h['precio_en_mejor_hora']):.4f} €/kWh</div>
+                <div class="kdelta ok">Hora {int(h['mejor_hora'])}:00 — {precio_min_h:.4f} €/kWh</div>
               </div>
               <div class="kpi">
                 <div class="kacc" style="background:var(--green)"></div>
                 <div class="klbl">Ahorro potencial hoy</div>
-                <div class="kval" style="color:var(--green)">{ahorro:.1f}%</div>
-                <div class="kdelta">vs hora más cara del día</div>
+                <div class="kval" style="color:var(--green)">{ahorro_euros:.2f} €</div>
+                <div class="kdelta ok">({ahorro_pct:.1f}% vs hora más cara · base 40 kWh)</div>
               </div>
             </div>
             """, unsafe_allow_html=True)
@@ -402,7 +407,15 @@ with tab4:
             pmax = filt["precio_max"].max()
             filt["var"] = filt["precio_medio"].pct_change() * 100
             var_med = filt["var"].mean()
-            color_var = "var(--green)" if var_med <= 0 else "var(--red)"
+            import math
+            if len(filt) < 2 or math.isnan(var_med):
+                var_display  = "Sin histórico suficiente"
+                color_var    = "var(--muted)"
+                var_fontsize = "14px"
+            else:
+                var_display  = f"{var_med:+.2f}%"
+                color_var    = "var(--green)" if var_med <= 0 else "var(--red)"
+                var_fontsize = "22px"
 
             st.markdown(f"""
             <div class="krow k4" style="margin-top:4px">
@@ -417,7 +430,7 @@ with tab4:
                 <div class="kval">{pmax:.4f}</div></div>
               <div class="kpi"><div class="kacc" style="background:var(--purple)"></div>
                 <div class="klbl">Variación media diaria</div>
-                <div class="kval" style="font-size:22px;color:{color_var}">{var_med:+.2f}%</div></div>
+                <div class="kval" style="font-size:{var_fontsize};color:{color_var}">{var_display}</div></div>
             </div>
             """, unsafe_allow_html=True)
 
