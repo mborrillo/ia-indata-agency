@@ -1,5 +1,5 @@
 """
-backfill_hosteleria.py — Carga histórica MEMO Hostelería
+backfill_hosteleria.yml — Carga histórica MEMO Hostelería
 Puebla los últimos N días para tener histórico real desde el primer día.
 
 Uso:
