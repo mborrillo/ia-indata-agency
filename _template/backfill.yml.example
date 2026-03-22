@@ -1,0 +1,32 @@
+name: Backfill — [NOMBRE PROYECTO]
+
+on:
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: 'Días de histórico a cargar (por defecto 20)'
+        required: false
+        default: '20'
+
+jobs:
+  backfill:
+    name: Carga histórica de datos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r projects/[NOMBRE-CARPETA]/requirements.txt
+
+      - name: Ejecutar backfill
+        env:
+          NEON_DATABASE_URL: ${{ secrets.[NOMBRE_SECRET] }}
+        run: |
+          cd projects/[NOMBRE-CARPETA]
+          python etl/backfill.py ${{ github.event.inputs.dias }}
