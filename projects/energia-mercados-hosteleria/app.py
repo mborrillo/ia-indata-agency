@@ -14,6 +14,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  CONFIGURACIÓN GENERAL DE LA PÁGINA                            ║
+# ║  page_title  → texto que aparece en la pestaña del navegador   ║
+# ║  page_icon   → emoji o URL de imagen que aparece en la pestaña ║
+# ║  layout      → "wide" usa todo el ancho | "centered" centra    ║
+# ╚══════════════════════════════════════════════════════════════════╝
 st.set_page_config(
     page_title="Monitor de Costes · Hostelería",
     page_icon="🍳",
@@ -24,22 +30,44 @@ st.set_page_config(
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+/* FUENTES — cambiar aquí para usar otras tipografías de Google Fonts
+   Space Mono: números y valores (monoespaciada, estilo terminal)
+   DM Sans: textos y etiquetas (legible, moderna)
+   Para cambiar: reemplaza el nombre en la URL y en font-family */
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
+/* ════════════════════════════════════════════════════════════════
+   PALETA DE COLORES — edita aquí para cambiar colores globalmente
+   Todos los elementos de la app usan estas variables.
+   ════════════════════════════════════════════════════════════════ */
 :root {
+    /* Fondo base — el más oscuro. Cambiar para modo claro: #f8fafc */
     --bg:     #080a0f;
+    /* Fondo de cards y paneles — una capa más clara que --bg */
     --bg2:    #0f1219;
+    /* Fondo en hover y estados activos */
     --bg3:    #171b26;
+    /* Fondo más claro — filas de tabla en hover */
     --bg4:    #1f2433;
+    /* Borde por defecto — opacidad baja (sutil) */
     --bdr:    rgba(255,255,255,0.06);
+    /* Borde en hover — más visible */
     --bdr2:   rgba(255,255,255,0.13);
+    /* Color principal — logo, acentos, links */
     --teal:   #2dd4bf;
+    /* Color secundario — tabs activos, variaciones, botones */
     --purple: #c4b5fd;
+    /* Advertencia — semáforo NORMAL, precios en rango */
     --amber:  #fbbf24;
+    /* Alerta — semáforo ALTO, variaciones negativas */
     --red:    #f87171;
+    /* Solo para semáforos de estado BAJO/VERDE (buena noticia) */
     --green:  #34d399;
+    /* Texto principal — blanco suave. Más blanco: #ffffff */
     --text:   #f1f5f9;
+    /* Texto terciario — captions, labels de KPI */
     --dim:    #94a3b8;
+    /* Texto muy apagado — pie de página, separadores */
     --muted:  #475569;
 }
 html, body, .stApp,
@@ -386,15 +414,22 @@ with tab4:
         hist["YY-WW"] = hist["fecha"].dt.strftime("%Y-W%W")
 
         st.markdown('<div class="slabel">Filtros</div>', unsafe_allow_html=True)
-        fc1, fc2 = st.columns(2)
         meses_h = sorted(hist["YY-MM"].unique(), reverse=True)
         weeks_h = sorted(hist["YY-WW"].unique(), reverse=True)
+        # Filtros + descarga en la misma fila
+        fc1, fc2, fc3 = st.columns([3, 3, 2])
         with fc1:
             sel_mes = st.multiselect("Mes", meses_h, default=[], key="h_mes",
                                       placeholder="Todos los meses")
         with fc2:
             sel_wk  = st.multiselect("Semana", weeks_h, default=[], key="h_wk",
                                       placeholder="Todas las semanas")
+        with fc3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            hist_dl = hist.copy()
+            hist_dl["fecha"] = hist_dl["fecha"].dt.date
+            st.download_button("⬇ CSV Luz", csv_dl(hist_dl),
+                "hosteleria_luz.csv", "text/csv", key="dl_hist_top")
 
         filt = hist.copy()
         if sel_mes: filt = filt[filt["YY-MM"].isin(sel_mes)]
@@ -461,12 +496,7 @@ with tab4:
                 t = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var_str"]].copy()
                 t.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
                 st.dataframe(t, use_container_width=True, hide_index=True)
-                dl, info = st.columns([1,4])
-                with dl:
-                    st.download_button("⬇ Descargar CSV", csv_dl(t),
-                        "hosteleria_luz_historico.csv", "text/csv", key="dl_hist")
-                with info:
-                    st.caption(f"{len(t)} registros")
+                st.caption(f"{len(t)} registros")
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
