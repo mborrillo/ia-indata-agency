@@ -214,21 +214,24 @@ summary:hover { color: var(--purple) !important; }
 
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  BASE DE DATOS — conexión y utilidades                         ║
-# ║  DB_CONNECTION_STRING → cadena de conexión a PostgreSQL         ║
-# ║  engine               → motor SQLAlchemy                        ║
-# ║  q(sql)               → ejecuta query y devuelve DataFrame      ║
+# ║  NEON_DATABASE_URL → cadena de conexión a PostgreSQL (Neon)    ║
+# ║  get_engine()      → motor SQLAlchemy (cacheado)               ║
+# ║  q(sql)            → ejecuta query y devuelve DataFrame        ║
 # ╚══════════════════════════════════════════════════════════════════╝
-DB_CONNECTION_STRING = os.environ.get("DB_CONNECTION_STRING")
-if not DB_CONNECTION_STRING:
-    st.error("No se encontró DB_CONNECTION_STRING en las variables de entorno")
-    st.stop()
+DB_URL = os.getenv("NEON_DATABASE_URL")
 
-engine = create_engine(DB_CONNECTION_STRING, pool_pre_ping=True)
+@st.cache_resource
+def get_engine():
+    return create_engine(DB_URL, pool_pre_ping=True, pool_recycle=300,
+                         connect_args={"connect_timeout": 10})
 
-def q(sql):
-    """Ejecuta una query SQL y devuelve DataFrame"""
-    with engine.connect() as conn:
-        return pd.read_sql(text(sql), conn)
+def q(sql: str) -> pd.DataFrame:
+    try:
+        with get_engine().connect() as conn:
+            return pd.read_sql(text(sql), conn)
+    except Exception as e:
+        st.error(f"Error en consulta SQL: {e}")
+        return pd.DataFrame()
 
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  HELPER FUNCTIONS — funciones auxiliares reutilizables         ║
