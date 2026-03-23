@@ -68,7 +68,7 @@ st.markdown("""
     /* Texto terciario — captions, labels de KPI */
     --dim:    #94a3b8;
     /* Texto muy apagado — pie de página, separadores */
-    --muted:  #475569;
+    --muted:  #94a3b8;
 }
 
 html, body, .stApp,
@@ -95,7 +95,7 @@ html, body, .stApp,
     display: flex; align-items: center; gap: 14px;
     padding-bottom: 22px; border-bottom: 1px solid var(--bdr); margin-bottom: 28px;
 }
-.memo-logo { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; color: var(--teal); letter-spacing: -0.5px; }
+.memo-logo { font-family: 'DM Sans', sans-serif; font-size: 24px; font-weight: 700; color: var(--teal); letter-spacing: 0.01em; }
 .memo-sub  { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; }
 .memo-badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--teal); background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.2); padding: 5px 12px; border-radius: 20px; }
 
@@ -276,8 +276,28 @@ def tabla_html(df, col_var="Variación %"):
       </table>
     </div>"""
 
-def csv_bytes(df):
-    return df.to_csv(index=False).encode("utf-8")
+def csv_nombre(seccion: str) -> str:
+    """Genera nombre de archivo CSV con formato: seccion_YYYY-MM-DD.csv"""
+    from datetime import date
+    return f"{seccion}_{date.today().strftime('%Y-%m-%d')}.csv"
+
+
+def df_para_csv(df):
+    """Ordena por fecha descendente antes de exportar."""
+    df = df.copy()
+    for col in df.columns:
+        if any(k in col.lower() for k in ["fecha", "período", "date"]):
+            try:
+                df = df.sort_values(col, ascending=False).reset_index(drop=True)
+                break
+            except Exception:
+                pass
+    return df
+
+
+def csv_bytes(df) -> bytes:
+    """CSV con orden descendente por fecha."""
+    return df_para_csv(df).to_csv(index=False).encode("utf-8")
 
 def apply_filter(df, col, sel):
     """Si sel está vacío devuelve todo, si no filtra."""
@@ -335,7 +355,7 @@ with tab1:
             hist_dl = hist_raw.copy()
             hist_dl["fecha"] = hist_dl["fecha"].dt.date
             st.download_button("⬇ CSV Energía", csv_bytes(hist_dl),
-                "memo_energia.csv", "text/csv", key="dl_ene")
+                csv_nombre("memo_energia"), "text/csv", key="dl_ene")
         # Datos filtrados para tarjetas, gráfico y tabla
         hist = hist_raw.copy()
         hist = apply_filter(hist, "YY-MM", sel_mes_e)
@@ -519,7 +539,7 @@ with tab2:
         with col_dl:
             st.markdown("<br>", unsafe_allow_html=True)
             st.download_button("⬇ CSV Mercados", csv_bytes(df_dl),
-                "memo_mercados.csv", "text/csv", key="dl_mkt")
+                csv_nombre("memo_mercados"), "text/csv", key="dl_mkt")
 
         # Gráfico barras reactivo
         df_sorted = df.sort_values("variacion_p")
@@ -591,7 +611,7 @@ with tab3:
         with mc3:
             st.markdown("<br>", unsafe_allow_html=True)
             st.download_button("⬇ CSV EUR/USD", csv_bytes(hist_div),
-                "memo_eurusd.csv", "text/csv", key="dl_div_top")
+                csv_nombre("memo_eurusd"), "text/csv", key="dl_div_top")
 
         hd = apply_filter(hist_div, "YY-MM", sel_mes_m)
         hd = apply_filter(hd, "YY-WW", sel_wk_m)
@@ -681,7 +701,7 @@ with tab3:
             ipc_c1, ipc_c2 = st.columns([2, 5])
             with ipc_c1:
                 st.download_button("⬇ CSV IPC", csv_bytes(ti_show),
-                    "memo_ipc.csv", "text/csv", key="dl_ipc")
+                    csv_nombre("memo_ipc"), "text/csv", key="dl_ipc")
             with ipc_c2:
                 st.caption(f"{len(ti_show)} registros")
 
