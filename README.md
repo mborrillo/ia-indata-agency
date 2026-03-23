@@ -1,4 +1,4 @@
-# 🏢 ia-indata Agency
+# 🏢 IA-Indata Agency
 
 **Agencia de datos con IA.** Proyectos de inteligencia de datos replicables
 a cualquier sector empresarial, construidos sobre un stack 100% freemium.
