@@ -741,7 +741,7 @@ with tab3:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="memo-footer">
-  <div class="footer-left">ia-indata agency · MEMO v1 ·
+  <div class="footer-left">ia indata agency · MEMO v1 ·
     <a href="https://github.com/mborrillo/ia-indata-agency"
        style="color:var(--teal);text-decoration:none">GitHub ↗</a>
   </div>
