@@ -271,7 +271,7 @@ st.markdown("""
 <div class="hdr">
   <div>
     <div class="hdr-logo">🍳 MEMO Hostelería</div>
-    <div class="hdr-sub">Monitor de Empresas &amp; Mercados Operativos · Hostelería · ia-indata Agency</div>
+    <div class="hdr-sub">Monitor para Empresas &amp; Mercados Operativos · Hostelería · ia-indata agency</div>
   </div>
   <div class="hdr-badge">● LIVE · actualización diaria</div>
 </div>
