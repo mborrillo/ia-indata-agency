@@ -603,5 +603,3 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 ```
-
-¿Te gustaría que probáramos a implementar la navegación fija en este mismo código una vez validado que funciona correctamente?
