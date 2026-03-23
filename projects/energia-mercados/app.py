@@ -11,12 +11,9 @@ from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 load_dotenv()
 
-╔══════════════════════════════════════════════════════════════════╗
-║  CONFIGURACIÓN GENERAL DE LA PÁGINA                            ║
-║  page_title  → texto que aparece en la pestaña del navegador   ║
-║  page_icon   → emoji o URL de imagen que aparece en la pestaña ║
-║  layout      → "wide" usa todo el ancho | "centered" centra    ║
-╚══════════════════════════════════════════════════════════════════╝
+# ==============================================================================
+# CONFIGURACIÓN GENERAL DE LA PÁGINA
+# ==============================================================================
 st.set_page_config(
     page_title="MEMO · Energía & Mercados",
     page_icon="⚡",
@@ -24,48 +21,34 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-── CSS ───────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# CSS
+# ==============================================================================
 st.markdown("""
 /* FUENTES — cambiar aquí para usar otras tipografías de Google Fonts
    Space Mono: números y valores (monoespaciada, estilo terminal)
    DM Sans: textos y etiquetas (legible, moderna)
-   Para cambiar: reemplaza el nombre en la URL y en font-family */
+*/
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 /* ════════════════════════════════════════════════════════════════
-   PALETA DE COLORES — edita aquí para cambiar colores globalmente
-   Todos los elementos de la app usan estas variables.
+   PALETA DE COLORES
    ════════════════════════════════════════════════════════════════ */
 :root {
-    /* Fondo base — el más oscuro. Cambiar para modo claro: #f8fafc */
     --bg:     #080a0f;
-    /* Fondo de cards y paneles — una capa más clara que --bg */
     --bg2:    #0f1219;
-    /* Fondo en hover y estados activos */
     --bg3:    #171b26;
-    /* Fondo más claro — filas de tabla en hover */
     --bg4:    #1f2433;
-    /* Borde por defecto — opacidad baja (sutil) */
     --bdr:    rgba(255,255,255,0.06);
-    /* Borde en hover — más visible */
     --bdr2:   rgba(255,255,255,0.13);
-    /* Color principal — logo, acentos, links */
-    --teal:    #2dd4bf;
-    /* Color secundario — tabs activos, variaciones, botones */
+    --teal:   #2dd4bf;
     --purple: #c4b5fd;
-    /* Advertencia — semáforo NORMAL, precios en rango */
     --amber:  #fbbf24;
-     /* Alerta — semáforo ALTO, variaciones negativas */
     --red:    #f87171;
-    /* Solo para semáforos de estado BAJO/VERDE (buena noticia) */
     --green:  #34d399;
-    /* Texto principal — blanco suave. Más blanco: #ffffff */
     --text:   #f1f5f9;
-    /* Texto secundario */
     --text2:  #cbd5e1;
-    /* Texto terciario — captions, labels de KPI */
     --dim:    #94a3b8;
-    /* Texto muy apagado — pie de página, separadores */
     --muted:  #94a3b8;
 }
 
@@ -85,10 +68,7 @@ html, body, .stApp,
 
 .block-container { padding: 2.5rem 3rem 5rem !important; max-width: 1360px !important; }
 
-/* ── HEADER ─ Logo, subtítulo y badge "LIVE"
-   .memo-logo / .hdr-logo → tamaño y color del nombre de la app
-   .memo-sub  / .hdr-sub  → subtítulo bajo el logo
-   .memo-badge / .hdr-badge → píldora "LIVE" arriba a la derecha */
+/* HEADER */
 .memo-header {
     display: flex; align-items: center; gap: 14px;
     padding-bottom: 22px; border-bottom: 1px solid var(--bdr); margin-bottom: 28px;
@@ -97,20 +77,11 @@ html, body, .stApp,
 .memo-sub  { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; }
 .memo-badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--teal); background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.2); padding: 5px 12px; border-radius: 20px; }
 
-/* ── SEPARADORES DE SECCIÓN — línea con texto en mayúsculas
-   font-size → tamaño del texto del separador
-   color     → usa --dim para sutil o --text para destacado */
+/* SEPARADORES DE SECCIÓN */
 .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .section-label::after { content: ''; flex: 1; height: 1px; background: var(--bdr); }
 
-/* ── TARJETAS KPI ─────────────────────────────────────────────
-   .kpi-row.k4 → grid de 4 columnas |  .k3 → 3 | .k2 → 2
-   .kpi        → tarjeta completa: border-radius para redondeo
-   .kpi-accent → barra de color de 2px en la parte superior
-   .kpi-label  → etiqueta pequeña arriba (ej. "PRECIO MEDIO HOY")
-   .kpi-value  → número grande principal | .lg → versión más grande
-   .kpi-delta  → texto pequeño debajo del valor principal
-   .kpi-delta.up / .down → colores para delta positivo/negativo */
+/* TARJETAS KPI */
 .kpi-row { display: grid; gap: 12px; margin-bottom: 28px; }
 .kpi-4 { grid-template-columns: repeat(4, 1fr); }
 .kpi-3 { grid-template-columns: repeat(3, 1fr); }
@@ -125,21 +96,13 @@ html, body, .stApp,
 .kpi-delta.up   { color: var(--green); }
 .kpi-delta.down { color: var(--red); }
 
-/* ── SEMÁFOROS DE ESTADO — píldoras de color
-   .sem-bajo / .sem-verde   → estado favorable (verde)
-   .sem-normal / .sem-amarillo → estado neutro (ámbar)
-   .sem-alto / .sem-rojo    → estado desfavorable (rojo)
-   Para cambiar colores: editar background, color y border */
+/* SEMÁFOROS DE ESTADO */
 .semaforo { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; letter-spacing: 0.05em; padding: 6px 14px; border-radius: 20px; margin-top: 4px; }
 .sem-bajo   { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
 .sem-normal { background: rgba(251,191,36,0.10);  color: var(--amber); border: 1px solid rgba(251,191,36,0.22); }
 .sem-alto   { background: rgba(248,113,113,0.10); color: var(--red);   border: 1px solid rgba(248,113,113,0.22); }
 
-/* ── TABLA DE DATOS ───────────────────────────────────────────
-   .mkt-table th → cabeceras: font-size, color, padding
-   .mkt-table td → celdas: font-size, color, padding
-   .cat-pill     → píldoras de categoría en la tabla
-   Cada .cat-[nombre] tiene su propio color de fondo y texto */
+/* TABLA DE DATOS */
 .mkt-table { width: 100%; border-collapse: collapse; }
 .mkt-table th { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--bdr); text-align: left; }
 .mkt-table td { padding: 12px 14px; border-bottom: 1px solid var(--bdr); font-size: 13px; color: var(--text); }
@@ -153,21 +116,13 @@ html, body, .stApp,
 .cat-Divisa       { background: rgba(255,255,255,0.07); color: var(--dim); }
 .price-mono { font-family: 'Space Mono', monospace; font-size: 13px; }
 
-/* ── PESTAÑAS DE NAVEGACIÓN ────────────────────────────────────
-   [role="tablist"] → contenedor de las pestañas
-   [role="tab"]     → pestaña inactiva: color del texto
-   [aria-selected="true"] → pestaña activa: color y fondo
-   Para cambiar color activo: editar color: var(--purple) */
+/* PESTAÑAS DE NAVEGACIÓN */
 [data-testid="stTabs"] [role="tablist"] { background: var(--bg2) !important; border: 1px solid var(--bdr) !important; border-radius: 10px !important; padding: 4px !important; gap: 2px !important; margin-bottom: 24px; }
 [data-testid="stTabs"] [role="tab"] { background: transparent !important; border: none !important; color: var(--muted) !important; font-family: 'DM Sans', sans-serif !important; font-size: 13px !important; font-weight: 500 !important; padding: 8px 18px !important; border-radius: 7px !important; transition: all 0.15s !important; }
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] { background: var(--bg3) !important; color: var(--purple) !important; border: 1px solid rgba(196,181,253,0.2) !important; }
 [data-testid="stTabs"] [role="tab"]:hover:not([aria-selected="true"]) { color: var(--text) !important; background: rgba(255,255,255,0.04) !important; }
 
-/* ── FILTROS Y DESPLEGABLES ────────────────────────────────────
-   [data-baseweb="tag"]   → etiqueta seleccionada en multiselect
-   [data-baseweb="menu"]  → menú desplegable de opciones
-   :focus-within          → borde al enfocar el selector
-   Para cambiar color: reemplazar rgba(196,181,253,...) por otro color */
+/* FILTROS Y DESPLEGABLES */
 [data-testid="stMultiSelect"] [data-baseweb="tag"] { background-color: rgba(196,181,253,0.15) !important; border: 1px solid rgba(196,181,253,0.35) !important; color: #c4b5fd !important; border-radius: 6px !important; }
 [data-testid="stMultiSelect"] [data-baseweb="tag"] span,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] [aria-label="Remove"] { color: #c4b5fd !important; }
@@ -181,38 +136,28 @@ html, body, .stApp,
 [data-baseweb="menu"] li:hover,
 [data-baseweb="menu"] [aria-selected="true"] { background: rgba(196,181,253,0.1) !important; color: #c4b5fd !important; }
 
-/* ── BOTÓN DE DESCARGA CSV ─────────────────────────────────────
-   button        → estilo del botón en reposo
-   button:hover  → estilo al pasar el ratón
-   color          → color del texto del botón
-   border-radius → redondeo de las esquinas */
+/* BOTÓN DE DESCARGA CSV */
 [data-testid="stDownloadButton"] button { background: var(--bg3) !important; border: 1px solid var(--bdr2) !important; color: var(--purple) !important; border-radius: 8px !important; font-size: 12px !important; padding: 6px 14px !important; transition: all 0.15s !important; }
 [data-testid="stDownloadButton"] button:hover { border-color: rgba(196,181,253,0.4) !important; background: rgba(196,181,253,0.08) !important; }
 
-/* ── ACORDEONES / EXPANDERS ────────────────────────────────────
-   summary:hover → color del título al pasar el ratón
-   details       → fondo y borde del contenido expandido */
+/* ACORDEONES / EXPANDERS */
 [data-testid="stExpander"] summary:hover { color: #c4b5fd !important; }
 [data-testid="stExpander"] details { background: var(--bg2) !important; border: 1px solid var(--bdr) !important; border-radius: 10px !important; }
 
-/* ── CONTENEDORES DE GRÁFICOS ──────────────────────────────────
-   .chart-box / .cbox  → tarjeta que envuelve el gráfico
-   .chart-title / .ctitle → título pequeño sobre el gráfico
-   Para quitar el borde: eliminar la línea border: ... */
+/* CONTENEDORES DE GRÁFICOS */
 .chart-box { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 12px; padding: 20px 20px 12px; margin-bottom: 16px; }
 .chart-title { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
 
-/* ── PIE DE PÁGINA ────────────────────────────────────────────
-   .memo-footer / .ftr → contenedor del footer
-   .footer-left / .ftxt → texto izquierdo (nombre agencia + link)
-   .source-tag / .ftag   → etiquetas de fuentes de datos */
+/* PIE DE PÁGINA */
 .memo-footer { border-top: 1px solid var(--bdr); padding-top: 20px; margin-top: 40px; display: flex; align-items: center; justify-content: space-between; }
 .footer-left { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
 .footer-sources { display: flex; gap: 12px; }
 .source-tag { font-size: 10px; color: var(--muted); background: var(--bg2); border: 1px solid var(--bdr); padding: 3px 9px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
 """, unsafe_allow_html=True)
 
-── Conexión ──────────────────────────────────────────────────────────────────
+# ==============================================================================
+# CONEXIÓN
+# ==============================================================================
 DB_URL = os.getenv("NEON_DATABASE_URL")
 
 @st.cache_resource
@@ -225,11 +170,12 @@ def q(sql: str) -> pd.DataFrame:
         with get_engine().connect() as conn:
             return pd.read_sql(text(sql), conn)
     except Exception as e:
-        # Si hay error de conexión o consulta, devolvemos vacío para no romper la app
         st.warning(f"Error al consultar datos: {e}")
         return pd.DataFrame()
 
-── Plotly theme ──────────────────────────────────────────────────────────────
+# ==============================================================================
+# PLOTLY THEME
+# ==============================================================================
 PLOTLY_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
     font=dict(family="DM Sans, sans-serif", color="#94a3b8", size=12),
@@ -241,7 +187,9 @@ PLOTLY_LAYOUT = dict(
     yaxis=dict(gridcolor="rgba(255,255,255,0.04)", zerolinecolor="rgba(255,255,255,0.08)", tickfont=dict(size=11)),
 )
 
-── Helpers ───────────────────────────────────────────────────────────────────
+# ==============================================================================
+# HELPERS
+# ==============================================================================
 def color_var(v):
     """Devuelve HTML con color según signo de variación."""
     if v is None or (isinstance(v, float) and pd.isna(v)):
@@ -298,12 +246,16 @@ def apply_filter(df, col, sel):
     """Si sel está vacío devuelve todo, si no filtra."""
     return df if not sel else df[df[col].isin(sel)]
 
-── Guard ─────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# GUARD
+# ==============================================================================
 if not DB_URL:
     st.error("⚠ NEON_DATABASE_URL no configurada")
     st.stop()
 
-── Header ────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# HEADER
+# ==============================================================================
 st.markdown("""
 <div class="memo-header">
   <div>
@@ -316,9 +268,9 @@ st.markdown("""
 
 tab1, tab2, tab3 = st.tabs(["⚡  Energía", "📈  Mercados", "🌍  Macro"])
 
-════════════════════════════════════════════════════════════
-TAB 1 — ENERGÍA
-════════════════════════════════════════════════════════════
+# ==============================================================================
+# TAB 1 — ENERGÍA
+# ==============================================================================
 with tab1:
     hist_raw = q("""
         SELECT fecha, precio_medio, precio_min, precio_max, media_movil_7d
@@ -331,11 +283,10 @@ with tab1:
         hist_raw["YY-MM"] = hist_raw["fecha"].dt.strftime("%Y-%m")
         hist_raw["YY-WW"] = hist_raw["fecha"].dt.strftime("%Y-W%W")
 
-        # ── Filtros (fuera del expander — reactivos) ──
+        # Filtros (fuera del expander — reactivos)
         st.markdown('<div class="section-label">Filtros</div>', unsafe_allow_html=True)
         meses_e = sorted(hist_raw["YY-MM"].unique(), reverse=True)
         weeks_e = sorted(hist_raw["YY-WW"].unique(), reverse=True)
-        # Filtros + descarga en la misma fila
         fc1, fc2 = st.columns(2)
         with fc1:
             sel_mes_e = st.multiselect("Mes (YY-MM)", meses_e, default=[], key="e_mes",
@@ -343,7 +294,6 @@ with tab1:
         with fc2:
             sel_wk_e  = st.multiselect("Semana (YY-WW)", weeks_e, default=[], key="e_wk",
                                        placeholder="Todas las semanas")
-        # Datos filtrados para tarjetas, gráfico y tabla
         hist = hist_raw.copy()
         hist = apply_filter(hist, "YY-MM", sel_mes_e)
         hist = apply_filter(hist, "YY-WW", sel_wk_e)
@@ -352,7 +302,6 @@ with tab1:
         if hist.empty:
             st.warning("Sin datos para el filtro seleccionado.")
         else:
-            # Calcular variación para KPIs del período filtrado
             precio_med  = hist["precio_medio"].mean()
             precio_min  = hist["precio_min"].min()
             precio_max  = hist["precio_max"].max()
@@ -367,7 +316,6 @@ with tab1:
             n_sube  = (hist["var_p"] > 0).sum()
             n_baja  = (hist["var_p"] < 0).sum()
 
-            # Semáforo del período
             media_global = hist_raw["precio_medio"].mean()
             sem_val  = "BAJO" if precio_med < media_global * 0.85 else ("ALTO" if precio_med > media_global * 1.15 else "NORMAL")
             sem_cls  = {"BAJO": "sem-bajo", "NORMAL": "sem-normal", "ALTO": "sem-alto"}[sem_val]
@@ -411,7 +359,6 @@ with tab1:
             </div>
             """, unsafe_allow_html=True)
 
-            # Gráfico — reactivo al filtro
             hist_plot = hist.copy()
             hist_plot["fecha_d"] = hist_plot["fecha"].dt.date
             fig = go.Figure()
@@ -432,7 +379,6 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # Tabla con descarga integrada
             with st.expander("Ver tabla histórica"):
                 tabla = hist.sort_values("fecha", ascending=False).copy()
                 tabla["var_str"] = tabla["var_p"].apply(
@@ -448,9 +394,9 @@ with tab1:
                     st.caption(f"{len(t_show)} registros")
                 st.markdown(tabla_html(t_show), unsafe_allow_html=True)
 
-════════════════════════════════════════════════════════════
-TAB 2 — MERCADOS
-════════════════════════════════════════════════════════════
+# ==============================================================================
+# TAB 2 — MERCADOS (MODIFICADO)
+# ==============================================================================
 with tab2:
     mkt = q("SELECT * FROM memo.v_mercados_resumen")
     if mkt.empty:
@@ -495,7 +441,7 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-        # ── GRÁFICO BARRAS (AHORA DESPUÉS DE KPIs) ─────────────────────
+        # GRÁFICO BARRAS (AHORA DESPUÉS DE KPIs, ANTES DE LA TABLA)
         df_sorted = df.sort_values("variacion_p")
         colors = ["#f87171" if v < -2 else ("#c4b5fd" if v > 2 else "#a78bfa")
                   for v in df_sorted["variacion_p"]]
@@ -513,9 +459,8 @@ with tab2:
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # ── TABLA MERCADOS (AHORA DENTRO DE EXPANDER) ───────────────────
+        # TABLA MERCADOS (AHORA DENTRO DE EXPANDER)
         with st.expander("Ver tabla de mercados"):
-            # Preparar datos para tabla
             rows_html = ""
             for _, row in df.sort_values("categoria").iterrows():
                 var = row["variacion_p"]
@@ -544,7 +489,7 @@ with tab2:
             </div>
             """, unsafe_allow_html=True)
 
-            # ── BOTÓN CSV INTEGRADO DENTRO DEL EXPANDER ─────────────────
+            # BOTÓN CSV INTEGRADO DENTRO DEL EXPANDER
             df_dl = df[["activo", "categoria", "precio_cierre", "variacion_p", "moneda", "tendencia", "fecha"]].copy()
             df_dl["activo"] = df_dl["activo"].str.replace("_", "  ")
             ec1, ec2 = st.columns([2, 5])
@@ -554,9 +499,9 @@ with tab2:
             with ec2:
                 st.caption(f"{len(df_dl)} registros")
 
-════════════════════════════════════════════════════════════
-TAB 3 — MACRO
-════════════════════════════════════════════════════════════
+# ==============================================================================
+# TAB 3 — MACRO
+# ==============================================================================
 with tab3:
     macro    = q("SELECT * FROM memo.v_macro_resumen")
     hist_div = q("SELECT fecha, tasa FROM memo.bronze_divisa WHERE par='EUR/USD' ORDER BY fecha ASC")
@@ -593,7 +538,6 @@ with tab3:
         hist_div["YY-MM"] = hist_div["fecha"].dt.strftime("%Y-%m")
         hist_div["YY-WW"] = hist_div["fecha"].dt.strftime("%Y-W%W")
 
-        # Filtros macro
         st.markdown('<div class="section-label">Filtros EUR/USD</div>', unsafe_allow_html=True)
         meses_m = sorted(hist_div["YY-MM"].unique(), reverse=True)
         weeks_m = sorted(hist_div["YY-WW"].unique(), reverse=True)
@@ -610,7 +554,6 @@ with tab3:
         hd = hd.sort_values("fecha").reset_index(drop=True)
 
         if not hd.empty:
-            # Tarjetas reactivas EUR/USD
             var_avg_m  = hd["variacion_p"].mean()
             n_sube_m   = (hd["variacion_p"] > 0).sum()
             n_baja_m   = (hd["variacion_p"] < 0).sum()
@@ -646,7 +589,6 @@ with tab3:
             </div>
             """, unsafe_allow_html=True)
 
-            # Gráfico reactivo
             hd_plot = hd.copy()
             hd_plot["fecha_d"] = hd_plot["fecha"].dt.date
             fig3 = go.Figure(go.Scatter(
@@ -662,7 +604,6 @@ with tab3:
             st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # Tabla EUR/USD con descarga integrada
             with st.expander("Ver tabla histórica EUR/USD"):
                 td = hd.sort_values("fecha", ascending=False).copy()
                 td["var_str"] = td["variacion_p"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
@@ -677,7 +618,6 @@ with tab3:
                     st.caption(f"{len(td_show)} registros")
                 st.markdown(tabla_html(td_show), unsafe_allow_html=True)
 
-    # Tabla IPC — descarga en el label de sección
     hist_ipc = q("""
         SELECT fecha, valor FROM memo.bronze_macro
         WHERE indicador = 'IPC_GENERAL_ESP' ORDER BY fecha DESC
@@ -702,7 +642,9 @@ with tab3:
             with ipc_c2:
                 st.caption(f"{len(ti_show)} registros")
 
-── Footer ────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# FOOTER
+# ==============================================================================
 st.markdown("""
 <div class="memo-footer">
   <div class="footer-left">
