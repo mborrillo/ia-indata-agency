@@ -1,11 +1,10 @@
 """
-MEMO — Monitor de Energía y Mercados
+MEMO — Monitor de Empresas & Mercados Operativos
 ia-indata Agency · v3 final
 """
 import io
 import os
 import psycopg2
-from sqlalchemy import create_engine, text
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -26,7 +25,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 :root {
-    --bg:     #0c0e14;
+    --bg:     #080a0f;
     --bg2:    #0f1219;
     --bg3:    #171b26;
     --bg4:    #1f2433;
@@ -151,20 +150,14 @@ html, body, .stApp,
 DB_URL = os.getenv("NEON_DATABASE_URL")
 
 @st.cache_resource
-def get_engine():
-    return create_engine(
-        DB_URL,
-        pool_pre_ping=True,
-        pool_recycle=300,
-        connect_args={"connect_timeout": 10},
-    )
+def get_conn():
+    return psycopg2.connect(DB_URL)
 
+@st.cache_data(ttl=300)
 def q(sql):
     try:
-        with get_engine().connect() as conn:
-            return pd.read_sql(text(sql), conn)
-    except Exception as e:
-        st.error(f"Error BD: {e}")
+        return pd.read_sql(sql, get_conn())
+    except Exception:
         return pd.DataFrame()
 
 # ── Plotly theme ──────────────────────────────────────────────────────────────
@@ -186,7 +179,7 @@ def color_var(v):
         return '<span style="color:#c4b5fd">—</span>'
     try:
         n = float(str(v).replace("%","").replace("+",""))
-        if n > 0:  return f'<span style="color:#34d399;font-weight:600">▲ {n:.2f}%</span>'
+        if n > 0:  return f'<span style="color:#c4b5fd;font-weight:600">▲ {n:.2f}%</span>'
         if n < 0:  return f'<span style="color:#f87171;font-weight:600">▼ {abs(n):.2f}%</span>'
         return f'<span style="color:#c4b5fd">— {n:.2f}%</span>'
     except Exception:
@@ -231,7 +224,7 @@ st.markdown("""
 <div class="memo-header">
   <div>
     <div class="memo-logo">⚡ MEMO</div>
-    <div class="memo-sub">Monitor de Energía &amp; Mercados · ia-indata Agency</div>
+    <div class="memo-sub">Monitor de Empresas &amp; Mercados Operativos · ia-indata Agency</div>
   </div>
   <div class="memo-badge">● LIVE · datos diarios</div>
 </div>
@@ -296,7 +289,7 @@ with tab1:
             sem_val  = "BAJO" if precio_med < media_global * 0.85 else ("ALTO" if precio_med > media_global * 1.15 else "NORMAL")
             sem_cls  = {"BAJO":"sem-bajo","NORMAL":"sem-normal","ALTO":"sem-alto"}[sem_val]
             sem_dot  = {"BAJO":"▼","NORMAL":"◆","ALTO":"▲"}[sem_val]
-            color_avg = "#34d399" if var_avg >= 0 else "#f87171"
+            color_avg = "#c4b5fd" if var_avg >= 0 else "#f87171"
 
             st.markdown('<div class="section-label">KPIs del período seleccionado</div>', unsafe_allow_html=True)
             st.markdown(f"""
@@ -393,7 +386,7 @@ with tab2:
         n_baja  = len(df[df["tendencia"] == "BAJA"])
         n_est   = len(df[df["tendencia"] == "ESTABLE"])
         var_avg = df["variacion_p"].mean()
-        color_avg = "#34d399" if var_avg >= 0 else "#f87171"
+        color_avg = "#c4b5fd" if var_avg >= 0 else "#f87171"
 
         st.markdown(f"""
         <div class="kpi-row kpi-4" style="margin-bottom:20px">
@@ -424,7 +417,7 @@ with tab2:
         rows_html = ""
         for _, row in df.sort_values("categoria").iterrows():
             var = row["variacion_p"]
-            if var > 2:    var_cell = f'<span style="color:#34d399;font-weight:600">▲ {abs(var):.2f}%</span>'
+            if var > 2:    var_cell = f'<span style="color:#c4b5fd;font-weight:600">▲ {abs(var):.2f}%</span>'
             elif var < -2: var_cell = f'<span style="color:#f87171;font-weight:600">▼ {abs(var):.2f}%</span>'
             else:           var_cell = f'<span style="color:#c4b5fd">— {abs(var):.2f}%</span>'
             cat_cls = f"cat-{row['categoria']}"
@@ -457,7 +450,7 @@ with tab2:
 
         # Gráfico barras reactivo
         df_sorted = df.sort_values("variacion_p")
-        colors = ["#f87171" if v < -2 else ("#34d399" if v > 2 else "#c4b5fd")
+        colors = ["#f87171" if v < -2 else ("#c4b5fd" if v > 2 else "#a78bfa")
                   for v in df_sorted["variacion_p"]]
         fig2 = go.Figure(go.Bar(
             x=df_sorted["variacion_p"],
@@ -532,7 +525,7 @@ with tab3:
             var_avg_m  = hd["variacion_p"].mean()
             n_sube_m   = (hd["variacion_p"] > 0).sum()
             n_baja_m   = (hd["variacion_p"] < 0).sum()
-            color_avg_m = "#34d399" if var_avg_m >= 0 else "#f87171"
+            color_avg_m = "#c4b5fd" if var_avg_m >= 0 else "#f87171"
             tasa_ini   = hd["tasa"].iloc[0]
             tasa_fin   = hd["tasa"].iloc[-1]
             var_total  = (tasa_fin - tasa_ini) / tasa_ini * 100 if tasa_ini else 0
