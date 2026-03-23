@@ -1,6 +1,6 @@
 """
 MEMO — Monitor para Empresas & Mercados Operativos
-ia-indata Agency · v3 final
+ia-indata agency · v3 final
 """
 import io
 import os
