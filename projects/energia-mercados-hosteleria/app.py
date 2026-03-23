@@ -486,20 +486,13 @@ with tab4:
         st.markdown('<div class="slabel">Filtros</div>', unsafe_allow_html=True)
         meses_h = sorted(hist["YY-MM"].unique(), reverse=True)
         weeks_h = sorted(hist["YY-WW"].unique(), reverse=True)
-        # Filtros + descarga en la misma fila
-        fc1, fc2, fc3 = st.columns([3, 3, 2])
+        fc1, fc2 = st.columns(2)
         with fc1:
             sel_mes = st.multiselect("Mes", meses_h, default=[], key="h_mes",
                                       placeholder="Todos los meses")
         with fc2:
             sel_wk  = st.multiselect("Semana", weeks_h, default=[], key="h_wk",
                                       placeholder="Todas las semanas")
-        with fc3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            hist_dl = hist.copy()
-            hist_dl["fecha"] = hist_dl["fecha"].dt.date
-            st.download_button("⬇ CSV Luz", df_para_csv(hist_dl).to_csv(index=False).encode("utf-8"),
-                csv_nombre("hosteleria_luz"), "text/csv", key="dl_hist_top")
 
         filt = hist.copy()
         if sel_mes: filt = filt[filt["YY-MM"].isin(sel_mes)]
