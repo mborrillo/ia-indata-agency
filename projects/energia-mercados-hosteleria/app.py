@@ -514,8 +514,15 @@ with tab4:
                 tabla["fecha_d"] = tabla["fecha"].dt.date
                 t = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var_str"]].copy()
                 t.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
-                st.dataframe(t, use_container_width=True, hide_index=True)
-                st.caption(f"{len(t)} registros")
+                hc1, hc2 = st.columns([2, 5])
+                with hc1:
+                    st.download_button("⬇ CSV",
+                        df_para_csv(t).to_csv(index=False).encode("utf-8"),
+                        csv_nombre("hosteleria_luz"),
+                        "text/csv", key="dl_hist_tbl")
+                with hc2:
+                    st.caption(f"{len(t)} registros")
+                st.markdown(tabla_html(t), unsafe_allow_html=True)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
