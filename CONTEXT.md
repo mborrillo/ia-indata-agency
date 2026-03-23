@@ -188,9 +188,22 @@ Edita las variables en `:root` — afectan a toda la app:
 - Helpers disponibles en todos los `app.py`: `csv_nombre()` y `df_para_csv()`
 
 ### Tablas históricas
-- Usar siempre `tabla_html()` — preserva colores de variación (verde/rojo/violeta)
+- Usar siempre `tabla_html()` — preserva colores de variación
+- `tabla_html()` y `color_var()` deben estar definidas en **todos** los `app.py`
 - **No usar** `st.dataframe()` para tablas con variaciones — pierde los colores
 - Orden dentro de la tabla: siempre fecha descendente (`sort_values("fecha", ascending=False)`)
+
+### Botón de descarga — regla definitiva
+- Tablas con expander: descarga **dentro** del expander, encima de la tabla (`ec1, ec2 = st.columns([2,5])`)
+- Tablas sin expander (ej. Mercados): descarga en la **fila de filtros** (`col_dl`)
+- **Nunca duplicar** — si la tabla tiene expander, no añadir botón extra en los filtros
+- Si la sección no tiene tabla con expander (Mercados), el botón va en la fila de filtros
+
+### Tags de selección multiselect — color violeta
+- CSS obligatorio en todos los `app.py` para sobreescribir el rojo por defecto de Streamlit
+- Buscar bloque `/* ── FILTROS Y DESPLEGABLES */` en el CSS
+- Tags seleccionados: `rgba(196,181,253,.15)` fondo · `#c4b5fd` texto · borde violeta
+- Sin este CSS, Streamlit muestra los tags en rojo por defecto
 
 ### Modo claro (si quisieras cambiar el tema)
 Cambiar en `:root`:
