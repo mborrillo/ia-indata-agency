@@ -1,6 +1,6 @@
 """
 MEMO Hostelería — Monitor de Costes para Restauración
-ia-indata Agency · Badajoz, Extremadura
+ia indata agency · Badajoz, Extremadura
 
 Diseño: sin jerga financiera. Todo en lenguaje de hostelero.
 Regla de oro: cualquier KPI debe entenderse en menos de 5 segundos.
@@ -585,7 +585,7 @@ with tab4:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="ftr">
-  <div class="ftxt">ia-indata Agency · MEMO Hostelería ·
+  <div class="ftxt">ia indata agency · MEMO Hostelería ·
     <a href="https://github.com/mborrillo/ia-indata-agency"
        style="color:var(--teal);text-decoration:none">GitHub ↗</a>
   </div>
