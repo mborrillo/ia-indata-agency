@@ -204,20 +204,31 @@ def df_para_csv(df):
 
 
 def color_var(v):
-    """HTML con color según signo de variación."""
-    if v is None or (isinstance(v, float) and pd.isna(v)):
-        return '<span style="color:#c4b5fd">—</span>'
+    """HTML con color según signo de variación. Maneja float, int, str y NaN."""
     try:
-        n = float(str(v).replace("%","").replace("+",""))
+        # Manejar NaN de pandas (numpy NaN no es float estándar)
+        import math
+        if v is None:
+            return '<span style="color:#c4b5fd">—</span>'
+        if isinstance(v, float) and math.isnan(v):
+            return '<span style="color:#c4b5fd">—</span>'
+        # Limpiar string y convertir a número
+        n = float(str(v).replace("%", "").replace("+", "").strip())
         if n > 0:  return f'<span style="color:#c4b5fd;font-weight:600">▲ {n:.2f}%</span>'
         if n < 0:  return f'<span style="color:#f87171;font-weight:600">▼ {abs(n):.2f}%</span>'
         return f'<span style="color:#c4b5fd">— {n:.2f}%</span>'
     except Exception:
+        # Si no se puede convertir, mostrar el valor tal cual sin crash
         return f'<span style="color:#c4b5fd">{v}</span>'
 
 
 def tabla_html(df, col_var="Variación %"):
-    """Tabla HTML con variación coloreada."""
+    """Tabla HTML con variación coloreada. col_var es la columna a colorear."""
+    df = df.copy()
+    # Convertir cualquier tipo no serializable a string para evitar TypeError
+    for c in df.columns:
+        if c != col_var:
+            df[c] = df[c].astype(str).replace("NaT", "—").replace("nan", "—")
     cols = list(df.columns)
     ths  = "".join(f"<th>{c}</th>" for c in cols)
     rows = ""
