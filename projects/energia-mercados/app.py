@@ -1,5 +1,5 @@
 """
-MEMO — Monitor de Empresas & Mercados Operativos
+MEMO — Monitor para Empresas & Mercados Operativos
 ia-indata Agency · v3 final
 """
 import io
