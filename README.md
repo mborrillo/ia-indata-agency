@@ -14,8 +14,8 @@ Autor: **Marcos Borrillo** · Badajoz, Extremadura
 
 | Proyecto | Sector | App |
 |----------|--------|-----|
-| [energia-mercados](projects/energia-mercados/) | Energía y mercados financieros | [energia-mercados.streamlit.app](https://energia-mercados.streamlit.app) |
-| [energia-mercados-hosteleria](projects/energia-mercados-hosteleria/) | Monitor de costes para restauración | [mercados-hosteleria.streamlit.app](https://mercados-hosteleria.streamlit.app) |
+| [memo-gen](projects/energia-mercados/) | Datos de Energía y mercados financieros | [memo-gen.streamlit.app](https://memo-gen.streamlit.app/) |
+| [memo-hosteleria](projects/energia-mercados-hosteleria/) | Monitor de costes para restauración | [memo-hosteleria.streamlit.app](https://memo-hosteleria.streamlit.app/) |
 
 ---
 
