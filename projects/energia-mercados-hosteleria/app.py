@@ -68,7 +68,7 @@ st.markdown("""
     /* Texto terciario — captions, labels de KPI */
     --dim:    #94a3b8;
     /* Texto muy apagado — pie de página, separadores */
-    --muted:  #94a3b8; #475569
+    --muted:  #94a3b8;
 }
 html, body, .stApp,
 [data-testid="stAppViewContainer"],
@@ -84,7 +84,7 @@ html, body, .stApp,
 
 /* Header */
 .hdr { display:flex; align-items:center; gap:14px; padding-bottom:20px; border-bottom:1px solid var(--bdr); margin-bottom:28px; }
-.hdr-logo { font-family:'Space Mono',monospace; font-size:20px; font-weight:700; color:var(--teal); }
+.hdr-logo { font-family:'DM Sans',sans-serif; font-size:22px; font-weight:700; color:var(--teal); letter-spacing:0.01em; }
 .hdr-sub  { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:3px; }
 .hdr-badge { margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; color:var(--teal); background:rgba(45,212,191,.08); border:1px solid rgba(45,212,191,.2); padding:5px 12px; border-radius:20px; }
 
@@ -168,6 +168,25 @@ PLOTLY = dict(
 
 def csv_dl(df: pd.DataFrame) -> bytes:
     return df.to_csv(index=False).encode("utf-8")
+
+
+def csv_nombre(seccion: str) -> str:
+    """Genera nombre: seccion_YYYY-MM-DD.csv"""
+    from datetime import date
+    return f"{seccion}_{date.today().strftime('%Y-%m-%d')}.csv"
+
+
+def df_para_csv(df):
+    """Ordena por fecha descendente antes de exportar."""
+    df = df.copy()
+    for col in df.columns:
+        if any(k in col.lower() for k in ["fecha", "período", "date"]):
+            try:
+                df = df.sort_values(col, ascending=False).reset_index(drop=True)
+                break
+            except Exception:
+                pass
+    return df
 
 def sem_class(s: str) -> str:
     return {"VERDE":"sem-verde","AMARILLO":"sem-amarillo","ROJO":"sem-rojo",
@@ -428,8 +447,8 @@ with tab4:
             st.markdown("<br>", unsafe_allow_html=True)
             hist_dl = hist.copy()
             hist_dl["fecha"] = hist_dl["fecha"].dt.date
-            st.download_button("⬇ CSV Luz", csv_dl(hist_dl),
-                "hosteleria_luz.csv", "text/csv", key="dl_hist_top")
+            st.download_button("⬇ CSV Luz", df_para_csv(hist_dl).to_csv(index=False).encode("utf-8"),
+                csv_nombre("hosteleria_luz"), "text/csv", key="dl_hist_top")
 
         filt = hist.copy()
         if sel_mes: filt = filt[filt["YY-MM"].isin(sel_mes)]
