@@ -192,3 +192,25 @@ Cambiar en `:root`:
 - [ ] Primer post LinkedIn sobre el proceso de construcción de MEMO Hostelería
 - [ ] Primer contacto con cliente piloto en Badajoz (hostelería o cooperativa)
 - [ ] Revisar MEMO Hostelería — posibles mejoras pendientes
+
+---
+
+## Decisiones de arquitectura futura
+
+### Capa de datos compartida (shared-datalake)
+**Cuándo implementar:** cuando haya 3+ proyectos activos y se esté
+copiando el mismo ETL por tercera vez.
+
+**Concepto:** un proyecto Neon `shared-datalake` con schema `shared`
+concentra todas las fuentes públicas. Cada proyecto solo ingesta
+sus fuentes específicas de sector y lee el resto de `shared.*`.
+
+**Impacto cuando se implemente:**
+- Nuevo proyecto en Neon: `shared-datalake` (schema `shared`)
+- Nuevo workflow diario compartido en `.github/workflows/shared_datalake.yml`
+- ETLs comunes (PVPC, IPC, BCE, Yahoo Finance) se mueven a `shared-datalake/etl/`
+- Proyectos actuales: eliminar ETLs duplicados, actualizar queries de vistas Gold
+- `app.py` y specs no cambian — el dashboard no sabe de dónde vienen los datos
+
+**Fuentes candidatas a compartir:** PVPC · IPC General · IPC Alimentación ·
+EUR/USD (BCE) · Yahoo Finance (tickers macro) · Gas NG=F
