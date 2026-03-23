@@ -1,8 +1,3 @@
-Aquí tienes el archivo completo corregido. He renombrado la variable conflictiva del **Tab 4** a `txt_color` para que no sobreescriba tu función `color_var` y la tabla se dibuje sin errores. 
-
-Puedes copiar y pegar este bloque directamente en tu entorno de producción:
-
-```python
 """
 MEMO Hostelería — Monitor de Costes para Restauración
 ia indata agency · Badajoz, Extremadura
