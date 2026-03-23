@@ -5,7 +5,7 @@ a cualquier sector empresarial, construidos sobre un stack 100% freemium.
 
 Autor: **Marcos Borrillo** · Badajoz, Extremadura
 [LinkedIn](https://www.linkedin.com/in/marcos-borrillo/) ·
-[Web]([https://marcos-borrillo.lovable.app/)
+[LinkedIn](https://www.linkedin.com/in/marcos-borrillo/) ·
 [AgroTech Extremadura](https://github.com/mborrillo/agro-tech-es)
 
 ---
