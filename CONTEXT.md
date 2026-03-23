@@ -135,6 +135,55 @@ ia-indata-agency/
 
 ---
 
+
+---
+
+## Guía rápida de edición visual (app.py)
+
+Todos los `app.py` tienen comentarios que indican qué editar.
+Busca el bloque correspondiente y cambia solo el valor indicado.
+
+### Para cambiar colores globalmente
+Edita las variables en `:root` — afectan a toda la app:
+```css
+--bg:     #080a0f   /* fondo base — más oscuro */
+--bg2:    #0f1219   /* cards y paneles */
+--teal:   #2dd4bf   /* color principal — logo y acentos */
+--purple: #c4b5fd   /* color secundario — tabs, botones, variaciones */
+--amber:  #fbbf24   /* advertencia / semáforo NORMAL */
+--red:    #f87171   /* alerta / semáforo ALTO */
+--text:   #f1f5f9   /* texto principal */
+```
+
+### Para cambiar elementos específicos
+
+| Qué quieres cambiar | Dónde buscarlo en app.py |
+|---------------------|--------------------------|
+| Nombre/color del logo | `/* ── HEADER */` → `.memo-logo` o `.hdr-logo` |
+| Tamaño de las tarjetas KPI | `/* ── TARJETAS KPI */` → `.kpi` padding/border-radius |
+| Número grande de KPI | `.kpi-value` → font-size |
+| Color de pestañas activas | `/* ── PESTAÑAS */` → `[aria-selected="true"]` color |
+| Color del botón CSV | `/* ── BOTÓN DE DESCARGA */` → button color |
+| Color de semáforos | `/* ── SEMÁFOROS */` → `.sem-bajo/.sem-alto` background y color |
+| Fuente tipográfica | `/* FUENTES */` → cambiar nombre en @import y font-family |
+| Fondo general | `:root` → `--bg` |
+| Borde de cards | `:root` → `--bdr` y `--bdr2` |
+
+### Botón de descarga CSV
+Siempre en la **misma fila que los filtros** (columna `fc3` o `col_dl`).
+Nunca al final de la tabla — el usuario no debe hacer scroll para encontrarlo.
+
+### Modo claro (si quisieras cambiar el tema)
+Cambiar en `:root`:
+```css
+--bg:   #f8fafc   /* fondo blanco */
+--bg2:  #ffffff   /* cards blancas */
+--bg3:  #f1f5f9   /* hover gris suave */
+--text: #0f172a   /* texto oscuro */
+--dim:  #475569
+--muted:#94a3b8
+```
+
 ## Próximos pasos
 
 - [ ] Alertas WhatsApp en hostelería (n8n + CallMeBot — gratis sin Twilio)
