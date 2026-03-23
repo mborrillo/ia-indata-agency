@@ -76,7 +76,7 @@ html, body, .stApp,
 .kval  { font-family:'Space Mono',monospace; font-size:26px; font-weight:700; color:var(--text); line-height:1; margin-bottom:8px; }
 .kval.lg { font-size:32px; }
 .kdelta { font-size:12px; color:var(--dim); }
-.kdelta.ok   { color:var(--green); }
+.kdelta.ok   { color:var(--purple); }
 .kdelta.warn { color:var(--amber); }
 .kdelta.bad  { color:var(--red); }
 
@@ -159,7 +159,7 @@ st.markdown("""
 <div class="hdr">
   <div>
     <div class="hdr-logo">🍳 MEMO Hostelería</div>
-    <div class="hdr-sub">Monitor de costes · Restauración &amp; Catering · ia-indata Agency</div>
+    <div class="hdr-sub">Monitor de Empresas &amp; Mercados Operativos · Hostelería · ia-indata Agency</div>
   </div>
   <div class="hdr-badge">● LIVE · actualización diaria</div>
 </div>
@@ -189,7 +189,7 @@ if not indice.empty:
           <span style="font-size:13px;color:var(--dim)">{r.get('aceite','—')}</span></div>
         <div><div class="klbl">IPC alimentación vs general</div>
           <span style="font-size:13px;font-family:'Space Mono',monospace;
-          color:{'var(--red)' if float(r.get('spread_ipc') or 0)>2 else 'var(--green)'}">
+          color:{'var(--red)' if float(r.get('spread_ipc') or 0)>2 else 'var(--purple)'}">
           {float(r.get('spread_ipc') or 0):+.2f} pts</span></div>
       </div>
     </div>
@@ -226,7 +226,7 @@ with tab1:
             <div class="kdelta">€/kWh · {pct:+.1f}% vs media 30d</div>
           </div>
           <div class="kpi">
-            <div class="kacc" style="background:var(--green)"></div>
+            <div class="kacc" style="background:var(--purple)"></div>
             <div class="klbl">Hora más barata</div>
             <div class="kval">{int(r['hora_min'])}:00h</div>
             <div class="kdelta ok">{float(r['precio_min']):.4f} €/kWh</div>
@@ -263,9 +263,9 @@ with tab1:
                 <div class="kdelta ok">Hora {int(h['mejor_hora'])}:00 — {precio_min_h:.4f} €/kWh</div>
               </div>
               <div class="kpi">
-                <div class="kacc" style="background:var(--green)"></div>
+                <div class="kacc" style="background:var(--purple)"></div>
                 <div class="klbl">Ahorro potencial hoy</div>
-                <div class="kval" style="color:var(--green)">{ahorro_euros:.2f} €</div>
+                <div class="kval" style="color:var(--purple)">{ahorro_euros:.2f} €</div>
                 <div class="kdelta ok">({ahorro_pct:.1f}% vs hora más cara · base 40 kWh)</div>
               </div>
             </div>
@@ -307,7 +307,7 @@ with tab2:
             tend = str(a.get("tendencia","ESTABLE"))
             rec_a = str(a.get("recomendacion_compra",""))
             diff  = float(a.get("diff_vs_media_4sem") or 0)
-            tend_color = "var(--red)" if tend=="SUBIENDO" else ("var(--green)" if tend=="BAJANDO" else "var(--amber)")
+            tend_color = "var(--red)" if tend=="SUBIENDO" else ("var(--purple)" if tend=="BAJANDO" else "var(--amber)")
             rec_cls_a  = "bad" if tend=="SUBIENDO" else ("ok" if tend=="BAJANDO" else "warn")
             st.markdown(f"""
             <div class="kpi">
@@ -335,7 +335,7 @@ with tab3:
         ipc_gen  = float(r.get("ipc_general") or 0)
         ipc_ali  = float(r.get("ipc_alimentacion") or 0)
         alerta_cls = "bad" if spread > 2 else ("warn" if spread > 0 else "ok")
-        color_spread = "var(--red)" if spread>2 else ("var(--amber)" if spread>0 else "var(--green)")
+        color_spread = "var(--red)" if spread>2 else ("var(--amber)" if spread>0 else "var(--purple)")
 
         st.markdown('<div class="slabel">¿Suben tus costes más que la inflación?</div>', unsafe_allow_html=True)
         st.markdown(f"""
@@ -349,7 +349,7 @@ with tab3:
           <div class="kpi">
             <div class="kacc" style="background:var(--amber)"></div>
             <div class="klbl">Inflación en alimentación</div>
-            <div class="kval" style="color:{'var(--red)' if ipc_ali>ipc_gen else 'var(--green)'}">{ipc_ali:+.1f}%</div>
+            <div class="kval" style="color:{'var(--red)' if ipc_ali>ipc_gen else 'var(--purple)'}">{ipc_ali:+.1f}%</div>
             <div class="kdelta">variación anual · INE</div>
           </div>
           <div class="kpi">
@@ -414,7 +414,7 @@ with tab4:
                 var_fontsize = "14px"
             else:
                 var_display  = f"{var_med:+.2f}%"
-                color_var    = "var(--green)" if var_med <= 0 else "var(--red)"
+                color_var    = "var(--purple)" if var_med <= 0 else "var(--red)"
                 var_fontsize = "22px"
 
             st.markdown(f"""
@@ -422,7 +422,7 @@ with tab4:
               <div class="kpi"><div class="kacc" style="background:var(--teal)"></div>
                 <div class="klbl">Precio medio período</div>
                 <div class="kval">{pm:.4f}</div><div class="kdelta">€/kWh</div></div>
-              <div class="kpi"><div class="kacc" style="background:var(--green)"></div>
+              <div class="kpi"><div class="kacc" style="background:var(--purple)"></div>
                 <div class="klbl">Mínimo período</div>
                 <div class="kval">{pmin:.4f}</div></div>
               <div class="kpi"><div class="kacc" style="background:var(--red)"></div>
