@@ -342,20 +342,13 @@ with tab1:
         meses_e = sorted(hist_raw["YY-MM"].unique(), reverse=True)
         weeks_e = sorted(hist_raw["YY-WW"].unique(), reverse=True)
         # Filtros + descarga en la misma fila
-        fc1, fc2, fc3 = st.columns([3, 3, 2])
+        fc1, fc2 = st.columns(2)
         with fc1:
             sel_mes_e = st.multiselect("Mes (YY-MM)", meses_e, default=[], key="e_mes",
                                         placeholder="Todos los meses")
         with fc2:
             sel_wk_e  = st.multiselect("Semana (YY-WW)", weeks_e, default=[], key="e_wk",
                                         placeholder="Todas las semanas")
-
-        with fc3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            hist_dl = hist_raw.copy()
-            hist_dl["fecha"] = hist_dl["fecha"].dt.date
-            st.download_button("⬇ CSV Energía", csv_bytes(hist_dl),
-                csv_nombre("memo_energia"), "text/csv", key="dl_ene")
         # Datos filtrados para tarjetas, gráfico y tabla
         hist = hist_raw.copy()
         hist = apply_filter(hist, "YY-MM", sel_mes_e)
@@ -606,17 +599,13 @@ with tab3:
         st.markdown('<div class="section-label">Filtros EUR/USD</div>', unsafe_allow_html=True)
         meses_m = sorted(hist_div["YY-MM"].unique(), reverse=True)
         weeks_m = sorted(hist_div["YY-WW"].unique(), reverse=True)
-        mc1, mc2, mc3 = st.columns([3, 3, 2])
+        mc1, mc2 = st.columns(2)
         with mc1:
             sel_mes_m = st.multiselect("Mes (YY-MM)", meses_m, default=[], key="m_mes",
                                         placeholder="Todos los meses")
         with mc2:
             sel_wk_m  = st.multiselect("Semana (YY-WW)", weeks_m, default=[], key="m_wk",
                                         placeholder="Todas las semanas")
-        with mc3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.download_button("⬇ CSV EUR/USD", csv_bytes(hist_div),
-                csv_nombre("memo_eurusd"), "text/csv", key="dl_div_top")
 
         hd = apply_filter(hist_div, "YY-MM", sel_mes_m)
         hd = apply_filter(hd, "YY-WW", sel_wk_m)
