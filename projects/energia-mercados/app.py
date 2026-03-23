@@ -85,20 +85,7 @@ html, body, .stApp,
 [data-testid="stStatusWidget"],
 [data-testid="stSidebar"] { display: none !important; }
 
-.block-container { padding: 2.5rem 3rem 5rem !important; max-width: 1360px !important; }
-
-/* ══════════════════════════════════════════════════════════════════
-   HEADER FIJO — Logo y tabs quedan visibles al hacer scroll
-   ══════════════════════════════════════════════════════════════════ */
-.sticky-header {
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    background: var(--bg);
-    padding: 1.5rem 0 1rem 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--bdr);
-}
+.block-container { padding: 2.5rem 3rem 5rem !important; max-width: 1360px !important; padding-top: 120px !important; }
 
 /* ── HEADER ── Logo, subtítulo y badge "LIVE"
    .memo-logo / .hdr-logo → tamaño y color del nombre de la app
@@ -106,19 +93,11 @@ html, body, .stApp,
    .memo-badge / .hdr-badge → píldora "LIVE" arriba a la derecha */
 .memo-header {
     display: flex; align-items: center; gap: 14px;
-    padding-bottom: 22px; border-bottom: 1px solid var(--bdr); margin-bottom: 20px;
+    padding-bottom: 22px; border-bottom: 1px solid var(--bdr); margin-bottom: 28px;
 }
 .memo-logo { font-family: 'DM Sans', sans-serif; font-size: 24px; font-weight: 700; color: var(--teal); letter-spacing: 0.01em; }
 .memo-sub  { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; }
 .memo-badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--teal); background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.2); padding: 5px 12px; border-radius: 20px; }
-
-/* ── TABS — pestañas de sección
-   .tab-bar → contenedor de los tabs
-   .tab-btn → cada botón/tab individual */
-.tab-bar { display: flex; gap: 6px; padding-bottom: 0; }
-.tab-btn { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--dim); background: transparent; border: 1px solid var(--bdr); padding: 9px 18px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-.tab-btn:hover { background: var(--bg3); border-color: var(--bdr2); color: var(--text2); }
-.tab-btn.active { background: var(--bg3); border-color: var(--purple); color: var(--purple); }
 
 /* ── SEPARADORES DE SECCIÓN — línea con texto en mayúsculas
    font-size → tamaño del texto del separador
@@ -172,52 +151,95 @@ html, body, .stApp,
 .cat-Energia      { background: rgba(251,191,36,0.12);  color: var(--amber); }
 .cat-Industrial   { background: rgba(196,181,253,0.12); color: var(--purple); }
 .cat-Alimentacion { background: rgba(52,211,153,0.10);  color: var(--green); }
-.cat-Tecnologia   { background: rgba(45,212,191,0.10);  color: var(--teal); }
-.mkt-sym { font-family: 'Space Mono', monospace; color: var(--text2); }
-.mkt-val { font-family: 'Space Mono', monospace; }
-.mkt-val.up   { color: var(--green); }
-.mkt-val.down { color: var(--red); }
+.cat-Indice       { background: rgba(45,212,191,0.10);  color: var(--teal); }
+.cat-Divisa       { background: rgba(255,255,255,0.07); color: var(--dim); }
+.price-mono { font-family: 'Space Mono', monospace; font-size: 13px; }
 
-/* ── CHARTS — contenedor de gráfico Plotly
-   .chart-box    → caja que envuelve cada gráfico
-   .chart-title  → título que va en la parte superior
+/* ── PESTAÑAS DE NAVEGACIÓN ────────────────────────────────────
+   [role="tablist"] → contenedor de las pestañas
+   [role="tab"]     → pestaña inactiva: color del texto
+   [aria-selected="true"] → pestaña activa: color y fondo
+   Para cambiar color activo: editar color: var(--purple) */
+[data-testid="stTabs"] [role="tablist"] { background: var(--bg2) !important; border: 1px solid var(--bdr) !important; border-radius: 10px !important; padding: 4px !important; gap: 2px !important; margin-bottom: 24px; }
+[data-testid="stTabs"] [role="tab"] { background: transparent !important; border: none !important; color: var(--muted) !important; font-family: 'DM Sans', sans-serif !important; font-size: 13px !important; font-weight: 500 !important; padding: 8px 18px !important; border-radius: 7px !important; transition: all 0.15s !important; }
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] { background: var(--bg3) !important; color: var(--purple) !important; border: 1px solid rgba(196,181,253,0.2) !important; }
+[data-testid="stTabs"] [role="tab"]:hover:not([aria-selected="true"]) { color: var(--text) !important; background: rgba(255,255,255,0.04) !important; }
+
+/* ── FILTROS Y DESPLEGABLES ────────────────────────────────────
+   [data-baseweb="tag"]   → etiqueta seleccionada en multiselect
+   [data-baseweb="menu"]  → menú desplegable de opciones
+   :focus-within          → borde al enfocar el selector
+   Para cambiar color: reemplazar rgba(196,181,253,...) por otro color */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] { background-color: rgba(196,181,253,0.15) !important; border: 1px solid rgba(196,181,253,0.35) !important; color: #c4b5fd !important; border-radius: 6px !important; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] [aria-label="Remove"] { color: #c4b5fd !important; }
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child,
+[data-baseweb="select"] > div:first-child,
+[data-testid="stSelectbox"] > div > div { background: var(--bg2) !important; border: 1px solid var(--bdr2) !important; border-radius: 8px !important; color: var(--text) !important; }
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child:focus-within,
+[data-baseweb="select"] > div:first-child:focus-within { border-color: rgba(196,181,253,0.5) !important; box-shadow: 0 0 0 2px rgba(196,181,253,0.12) !important; }
+[data-baseweb="popover"] [data-baseweb="menu"] { background: var(--bg3) !important; border: 1px solid var(--bdr2) !important; border-radius: 8px !important; }
+[data-baseweb="menu"] li { color: var(--text) !important; }
+[data-baseweb="menu"] li:hover,
+[data-baseweb="menu"] [aria-selected="true"] { background: rgba(196,181,253,0.1) !important; color: #c4b5fd !important; }
+
+/* ── BOTÓN DE DESCARGA CSV ─────────────────────────────────────
+   button        → estilo del botón en reposo
+   button:hover  → estilo al pasar el ratón
+   color         → color del texto del botón
    border-radius → redondeo de las esquinas */
-.chart-box { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 12px; padding: 20px; margin-bottom: 28px; transition: border-color 0.2s; }
-.chart-box:hover { border-color: var(--bdr2); }
-.chart-title { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
+[data-testid="stDownloadButton"] button { background: var(--bg3) !important; border: 1px solid var(--bdr2) !important; color: var(--purple) !important; border-radius: 8px !important; font-size: 12px !important; padding: 6px 14px !important; transition: all 0.15s !important; }
+[data-testid="stDownloadButton"] button:hover { border-color: rgba(196,181,253,0.4) !important; background: rgba(196,181,253,0.08) !important; }
 
-/* ── FOOTER ───────────────────────────────────────────────────
-   .memo-footer   → contenedor principal del pie de página
-   .source-tag    → cada píldora de fuente de datos */
-.memo-footer { display: flex; justify-content: space-between; align-items: center; padding: 28px 0 14px; margin-top: 50px; border-top: 1px solid var(--bdr); font-size: 12px; color: var(--muted); }
-.footer-left { display: flex; gap: 8px; align-items: center; }
-.footer-sources { display: flex; gap: 6px; }
-.source-tag { background: var(--bg3); border: 1px solid var(--bdr); padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; color: var(--dim); }
+/* ── ACORDEONES / EXPANDERS ────────────────────────────────────
+   summary:hover → color del título al pasar el ratón
+   details       → fondo y borde del contenido expandido */
+[data-testid="stExpander"] summary:hover { color: #c4b5fd !important; }
+[data-testid="stExpander"] details { background: var(--bg2) !important; border: 1px solid var(--bdr) !important; border-radius: 10px !important; }
 
-/* ── TABS — pestañas de sección
-   .tab-bar → contenedor de los tabs
-   .tab-btn → cada botón/tab individual */
-.tab-bar { display: flex; gap: 6px; padding-bottom: 0; }
-.tab-btn { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--dim); background: transparent; border: 1px solid var(--bdr); padding: 9px 18px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-.tab-btn:hover { background: var(--bg3); border-color: var(--bdr2); color: var(--text2); }
-.tab-btn.active { background: var(--bg3); border-color: var(--purple); color: var(--purple); }
+/* ── CONTENEDORES DE GRÁFICOS ──────────────────────────────────
+   .chart-box / .cbox  → tarjeta que envuelve el gráfico
+   .chart-title / .ctitle → título pequeño sobre el gráfico
+   Para quitar el borde: eliminar la línea border: ... */
+.chart-box { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 12px; padding: 20px 20px 12px; margin-bottom: 16px; }
+.chart-title { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
 
-/* ── EXPANDERS — acordeones de Streamlit para tablas
-   Estilos que se aplican a st.expander */
-[data-testid="stExpander"] { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 10px; margin-bottom: 12px; }
-[data-testid="stExpander"]:hover { border-color: var(--bdr2); }
-[data-testid="stExpanderDetails"] { padding: 16px 20px; }
-summary { color: var(--text) !important; font-weight: 500; font-size: 13px; }
-summary:hover { color: var(--purple) !important; }
+/* ── PIE DE PÁGINA ─────────────────────────────────────────────
+   .memo-footer / .ftr → contenedor del footer
+   .footer-left / .ftxt → texto izquierdo (nombre agencia + link)
+   .source-tag / .ftag  → etiquetas de fuentes de datos */
+.memo-footer { border-top: 1px solid var(--bdr); padding-top: 20px; margin-top: 40px; display: flex; align-items: center; justify-content: space-between; }
+.footer-left { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+.footer-sources { display: flex; gap: 12px; }
+.source-tag { font-size: 10px; color: var(--muted); background: var(--bg2); border: 1px solid var(--bdr); padding: 3px 9px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* ── HEADER Y TABS FIJOS ───────────────────────────────────────
+   Mantiene el logo y las pestañas de navegación siempre visibles
+   al hacer scroll. El padding-top en .block-container compensa
+   el espacio ocupado por el header fijo. */
+.sticky-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: var(--bg);
+    border-bottom: 1px solid var(--bdr);
+    padding: 14px 3rem 0;
+    max-width: 100%;
+}
+/* Tabs dentro del sticky header */
+.sticky-header [data-testid="stTabs"] [role="tablist"] {
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    gap: 4px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  BASE DE DATOS — conexión y utilidades                         ║
-# ║  NEON_DATABASE_URL → cadena de conexión a PostgreSQL (Neon)    ║
-# ║  get_engine()      → motor SQLAlchemy (cacheado)               ║
-# ║  q(sql)            → ejecuta query y devuelve DataFrame        ║
-# ╚══════════════════════════════════════════════════════════════════╝
+# ── Conexión ──────────────────────────────────────────────────────────────────
 DB_URL = os.getenv("NEON_DATABASE_URL")
 
 @st.cache_resource
@@ -230,445 +252,354 @@ def q(sql: str) -> pd.DataFrame:
         with get_engine().connect() as conn:
             return pd.read_sql(text(sql), conn)
     except Exception as e:
-        st.error(f"Error en consulta SQL: {e}")
+        # Si hay error de conexión o consulta, devolvemos vacío para no romper la app
+        st.warning(f"Error al consultar datos: {e}")
         return pd.DataFrame()
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  HELPER FUNCTIONS — funciones auxiliares reutilizables         ║
-# ║  tabla_html       → convierte DataFrame en tabla HTML          ║
-# ║  csv_bytes        → convierte DataFrame a bytes CSV            ║
-# ║  csv_nombre       → genera nombre de archivo con timestamp     ║
-# ║  apply_filter     → filtra DataFrame por columna si hay valor  ║
-# ║  semaforo_precio  → devuelve clase CSS según valor/thresholds  ║
-# ╚══════════════════════════════════════════════════════════════════╝
-def tabla_html(df, highlight_col=None):
-    """
-    Convierte un DataFrame en HTML de tabla estilizada
-    highlight_col: nombre de columna a resaltar con clase up/down
-    """
-    if df.empty:
-        return "<p style='color:var(--muted);padding:20px'>Sin datos disponibles</p>"
-    html = '<table class="mkt-table"><thead><tr>'
-    for col in df.columns:
-        html += f'<th>{col}</th>'
-    html += '</tr></thead><tbody>'
+# ── Plotly theme ──────────────────────────────────────────────────────────────
+PLOTLY_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="DM Sans, sans-serif", color="#94a3b8", size=12),
+    margin=dict(l=0, r=0, t=10, b=0),
+    legend=dict(bgcolor="rgba(0,0,0,0)", bordercolor="rgba(255,255,255,0.08)",
+                borderwidth=1, font=dict(size=11), orientation="h",
+                yanchor="bottom", y=-0.25, xanchor="left", x=0),
+    xaxis=dict(gridcolor="rgba(255,255,255,0.04)", zerolinecolor="rgba(255,255,255,0.08)", tickfont=dict(size=11)),
+    yaxis=dict(gridcolor="rgba(255,255,255,0.04)", zerolinecolor="rgba(255,255,255,0.08)", tickfont=dict(size=11)),
+)
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def color_var(v):
+    """Devuelve HTML con color según signo de variación."""
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return '<span style="color:#c4b5fd">—</span>'
+    try:
+        n = float(str(v).replace("%","").replace("+",""))
+        if n > 0:  return f'<span style="color:#c4b5fd;font-weight:600">▲ {n:.2f}%</span>'
+        if n < 0:  return f'<span style="color:#f87171;font-weight:600">▼ {abs(n):.2f}%</span>'
+        return f'<span style="color:#c4b5fd">— {n:.2f}%</span>'
+    except Exception:
+        return f'<span style="color:#c4b5fd">{v}</span>'
+
+def tabla_html(df, col_var="Variación %"):
+    """Renderiza DataFrame como tabla HTML con variación coloreada."""
+    cols = list(df.columns)
+    ths  = "".join(f"<th>{c}</th>" for c in cols)
+    rows = ""
     for _, row in df.iterrows():
-        html += '<tr>'
-        for col in df.columns:
-            val = row[col]
-            if pd.isna(val):
-                val = "—"
-            elif highlight_col and col == highlight_col:
-                try:
-                    v = float(str(val).replace("%", "").replace("+", ""))
-                    cls = "up" if v > 0 else "down"
-                    html += f'<td><span class="mkt-val {cls}">{val}</span></td>'
-                    continue
-                except:
-                    pass
-            html += f'<td>{val}</td>'
-        html += '</tr>'
-    html += '</tbody></table>'
-    return html
+        tds = ""
+        for c in cols:
+            val = row[c]
+            if c == col_var:
+                tds += f"<td>{color_var(val)}</td>"
+            else:
+                tds += f"<td>{val}</td>"
+        rows += f"<tr>{tds}</tr>"
+    return f"""
+    <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-top:8px">
+      <table class="mkt-table">
+        <thead><tr>{ths}</tr></thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>"""
 
-def csv_bytes(df):
-    """Convierte DataFrame a bytes CSV para descarga"""
-    buf = io.StringIO()
-    df.to_csv(buf, index=False)
-    return buf.getvalue().encode("utf-8")
+def csv_nombre(seccion: str) -> str:
+    """Genera nombre de archivo CSV con formato: seccion_YYYY-MM-DD.csv"""
+    from datetime import date
+    return f"{seccion}_{date.today().strftime('%Y-%m-%d')}.csv"
 
-def csv_nombre(base="memo_export"):
-    """Genera nombre de archivo CSV con timestamp"""
-    return f"{base}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-def apply_filter(df, col, values):
-    """Aplica filtro a DataFrame si values no está vacío"""
-    if not values:
-        return df
-    return df[df[col].isin(values)]
+def df_para_csv(df):
+    """Ordena por fecha descendente antes de exportar."""
+    df = df.copy()
+    for col in df.columns:
+        if any(k in col.lower() for k in ["fecha", "período", "date"]):
+            try:
+                df = df.sort_values(col, ascending=False).reset_index(drop=True)
+                break
+            except Exception:
+                pass
+    return df
 
-def semaforo_precio(p, norm_low, norm_high):
-    """
-    Devuelve clase de semáforo según precio:
-    p < norm_low      → sem-bajo  (verde)
-    norm_low ≤ p ≤ norm_high → sem-normal (amarillo)
-    p > norm_high     → sem-alto  (rojo)
-    """
-    if p < norm_low:
-        return "sem-bajo", "BAJO"
-    elif p > norm_high:
-        return "sem-alto", "ALTO"
-    else:
-        return "sem-normal", "NORMAL"
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  PLOTLY LAYOUT — configuración global para todos los gráficos  ║
-# ║  template → tema oscuro de Plotly                               ║
-# ║  paper_bgcolor / plot_bgcolor → fondos transparentes           ║
-# ║  margin → márgenes del gráfico                                  ║
-# ║  font   → tipografía y color del texto                          ║
-# ╚══════════════════════════════════════════════════════════════════╝
-PLOTLY_LAYOUT = {
-    "template": "plotly_dark",
-    "paper_bgcolor": "rgba(0,0,0,0)",
-    "plot_bgcolor": "rgba(0,0,0,0)",
-    "margin": dict(l=10, r=10, t=30, b=40),
-    "font": dict(family="DM Sans, sans-serif", size=11, color="#94a3b8"),
-    "xaxis": dict(showgrid=False, zeroline=False),
-    "yaxis": dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", zeroline=False),
-}
+def csv_bytes(df) -> bytes:
+    """CSV con orden descendente por fecha."""
+    return df_para_csv(df).to_csv(index=False).encode("utf-8")
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  HEADER — Logo, subtítulo y badge LIVE                         ║
-# ║  Se muestra al inicio de la app, antes de las tabs             ║
-# ╚══════════════════════════════════════════════════════════════════╝
-st.markdown('<div class="sticky-header">', unsafe_allow_html=True)
+def apply_filter(df, col, sel):
+    """Si sel está vacío devuelve todo, si no filtra."""
+    return df if not sel else df[df[col].isin(sel)]
 
+# ── Guard ─────────────────────────────────────────────────────────────────────
+if not DB_URL:
+    st.error("⚠ NEON_DATABASE_URL no configurada")
+    st.stop()
+
+# ── Header fijo ───────────────────────────────────────────────────────────────
 st.markdown("""
-<div class="memo-header">
-  <div style="display:flex;flex-direction:column">
-    <div class="memo-logo">MEMO</div>
-    <div class="memo-sub">Monitor de Empresas & Mercados Operativos</div>
+<div class="sticky-header">
+  <div class="memo-header" style="margin-bottom:0;padding-bottom:12px;border-bottom:none">
+    <div>
+      <div class="memo-logo">⚡ MEMO</div>
+      <div class="memo-sub">Monitor de Empresas &amp; Mercados Operativos · ia-indata Agency</div>
+    </div>
+    <div class="memo-badge">● LIVE · datos diarios</div>
   </div>
-  <div class="memo-badge">● LIVE</div>
 </div>
 """, unsafe_allow_html=True)
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  TABS — Sistema de navegación por secciones                    ║
-# ║  st.tabs() → crea las pestañas de Streamlit                    ║
-# ║  tab1, tab2, tab3, tab4 → cada sección de la app               ║
-# ╚══════════════════════════════════════════════════════════════════╝
-tab1, tab2, tab3, tab4 = st.tabs(["⚡ Energía", "💹 Mercados", "📊 Empresas", "🌍 Macroeconomía"])
+tab1, tab2, tab3 = st.tabs(["⚡  Energía", "📈  Mercados", "🌍  Macro"])
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # TAB 1 — ENERGÍA
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 with tab1:
-    st.markdown('<div class="section-label">Indicadores de red eléctrica</div>', unsafe_allow_html=True)
+    hist_raw = q("""
+        SELECT fecha, precio_medio, precio_min, precio_max, media_movil_7d
+        FROM memo.v_energia_historico ORDER BY fecha ASC
+    """)
 
-    # ── KPIs estáticos REE ────────────────────────────────────────────────────
-    ree = q("SELECT * FROM memo.bronze_ree_static ORDER BY fecha DESC LIMIT 1")
-    if not ree.empty:
-        row = ree.iloc[0]
-        precio_hoy = float(row["precio_medio_hoy"])
-        precio_ayer = float(row["precio_medio_ayer"]) if row["precio_medio_ayer"] else precio_hoy
-        dem_hoy = float(row["demanda_hoy_mwh"])
-        dem_ayer = float(row["demanda_ayer_mwh"]) if row["demanda_ayer_mwh"] else dem_hoy
-        delta_p = ((precio_hoy - precio_ayer) / precio_ayer * 100) if precio_ayer else 0
-        delta_d = ((dem_hoy - dem_ayer) / dem_ayer * 100) if dem_ayer else 0
+    if hist_raw.empty:
+        st.info("Sin datos de energía. Ejecuta el ETL.")
+    else:
+        hist_raw["fecha"] = pd.to_datetime(hist_raw["fecha"])
+        hist_raw["YY-MM"] = hist_raw["fecha"].dt.strftime("%Y-%m")
+        hist_raw["YY-WW"] = hist_raw["fecha"].dt.strftime("%Y-W%W")
 
-        sem_cls, sem_txt = semaforo_precio(precio_hoy, 80, 120)
-
-        st.markdown(f"""
-        <div class="kpi-row kpi-3">
-          <div class="kpi">
-            <div class="kpi-accent" style="background:var(--teal)"></div>
-            <div class="kpi-label">Precio medio hoy</div>
-            <div class="kpi-value lg">{precio_hoy:.2f} €/MWh</div>
-            <div class="kpi-delta {'up' if delta_p>0 else 'down'}">{delta_p:+.2f}% vs ayer</div>
-            <div class="semaforo {sem_cls}">{sem_txt}</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-accent" style="background:var(--purple)"></div>
-            <div class="kpi-label">Demanda hoy</div>
-            <div class="kpi-value">{dem_hoy:,.0f} MWh</div>
-            <div class="kpi-delta {'up' if delta_d>0 else 'down'}">{delta_d:+.2f}% vs ayer</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-accent" style="background:var(--amber)"></div>
-            <div class="kpi-label">% Renovable</div>
-            <div class="kpi-value">{float(row['renovable_pct']):.1f}%</div>
-            <div class="kpi-delta">del total generado</div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Histórico de precios REE ──────────────────────────────────────────────
-    st.markdown('<div class="section-label">Histórico de precios</div>', unsafe_allow_html=True)
-    hist = q("SELECT * FROM memo.bronze_ree_hist ORDER BY fecha")
-    if not hist.empty:
-        hist["fecha"] = pd.to_datetime(hist["fecha"])
+        # ── Filtros (fuera del expander — reactivos) ──
+        st.markdown('<div class="section-label">Filtros</div>', unsafe_allow_html=True)
+        meses_e = sorted(hist_raw["YY-MM"].unique(), reverse=True)
+        weeks_e = sorted(hist_raw["YY-WW"].unique(), reverse=True)
+        # Filtros + descarga en la misma fila
+        fc1, fc2 = st.columns(2)
+        with fc1:
+            sel_mes_e = st.multiselect("Mes (YY-MM)", meses_e, default=[], key="e_mes",
+                                        placeholder="Todos los meses")
+        with fc2:
+            sel_wk_e  = st.multiselect("Semana (YY-WW)", weeks_e, default=[], key="e_wk",
+                                        placeholder="Todas las semanas")
+        # Datos filtrados para tarjetas, gráfico y tabla
+        hist = hist_raw.copy()
+        hist = apply_filter(hist, "YY-MM", sel_mes_e)
+        hist = apply_filter(hist, "YY-WW", sel_wk_e)
         hist = hist.sort_values("fecha").reset_index(drop=True)
-        hist["YY-MM"] = hist["fecha"].dt.strftime("%Y-%m")
-        hist["YY-WW"] = hist["fecha"].dt.strftime("%Y-W%W")
 
-        # Filtros
-        meses = sorted(hist["YY-MM"].unique(), reverse=True)
-        weeks = sorted(hist["YY-WW"].unique(), reverse=True)
+        if hist.empty:
+            st.warning("Sin datos para el filtro seleccionado.")
+        else:
+            # Calcular variación para KPIs del período filtrado
+            precio_med  = hist["precio_medio"].mean()
+            precio_min  = hist["precio_min"].min()
+            precio_max  = hist["precio_max"].max()
+            hora_min_r  = q("SELECT hora_min FROM memo.v_energia_resumen LIMIT 1")
+            hora_max_r  = q("SELECT hora_max FROM memo.v_energia_resumen LIMIT 1")
+            hora_min_v  = int(hora_min_r.iloc[0,0]) if not hora_min_r.empty else "—"
+            hora_max_v  = int(hora_max_r.iloc[0,0]) if not hora_max_r.empty else "—"
 
-        c1, c2 = st.columns(2)
-        with c1:
-            sel_mes = st.multiselect("Mes (YY-MM)", meses, default=[], key="e_mes",
-                                      placeholder="Todos los meses")
-        with c2:
-            sel_wk = st.multiselect("Semana (YY-WW)", weeks, default=[], key="e_wk",
-                                     placeholder="Todas las semanas")
+            hist["var_p"] = hist["precio_medio"].pct_change() * 100
+            var_avg = hist["var_p"].mean()
+            n_dias  = len(hist)
+            n_sube  = (hist["var_p"] > 0).sum()
+            n_baja  = (hist["var_p"] < 0).sum()
 
-        h = apply_filter(hist, "YY-MM", sel_mes)
-        h = apply_filter(h, "YY-WW", sel_wk)
-        h = h.sort_values("fecha").reset_index(drop=True)
+            # Semáforo del período
+            media_global = hist_raw["precio_medio"].mean()
+            sem_val  = "BAJO" if precio_med < media_global * 0.85 else ("ALTO" if precio_med > media_global * 1.15 else "NORMAL")
+            sem_cls  = {"BAJO":"sem-bajo","NORMAL":"sem-normal","ALTO":"sem-alto"}[sem_val]
+            sem_dot  = {"BAJO":"▼","NORMAL":"◆","ALTO":"▲"}[sem_val]
+            color_avg = "#c4b5fd" if var_avg >= 0 else "#f87171"
 
-        if not h.empty:
-            # KPIs reactivos
-            precio_avg = h["precio_medio"].mean()
-            precio_max = h["precio_medio"].max()
-            precio_min = h["precio_medio"].min()
-            dias_alto = (h["precio_medio"] > 120).sum()
-
+            st.markdown('<div class="section-label">KPIs del período seleccionado</div>', unsafe_allow_html=True)
             st.markdown(f"""
-            <div class="kpi-row kpi-4" style="margin-bottom:20px">
+            <div class="kpi-row kpi-4">
               <div class="kpi">
-                <div class="kpi-accent" style="background:var(--amber)"></div>
-                <div class="kpi-label">Precio promedio</div>
-                <div class="kpi-value">{precio_avg:.2f} €/MWh</div>
-              </div>
-              <div class="kpi">
-                <div class="kpi-accent" style="background:var(--red)"></div>
-                <div class="kpi-label">Precio máximo</div>
-                <div class="kpi-value">{precio_max:.2f} €/MWh</div>
+                <div class="kpi-accent" style="background:var(--teal)"></div>
+                <div class="kpi-label">Precio medio período</div>
+                <div class="kpi-value lg">{precio_med:.4f}</div>
+                <div class="kpi-delta">{n_dias} días seleccionados</div>
               </div>
               <div class="kpi">
                 <div class="kpi-accent" style="background:var(--green)"></div>
-                <div class="kpi-label">Precio mínimo</div>
-                <div class="kpi-value">{precio_min:.2f} €/MWh</div>
+                <div class="kpi-label">Mínimo período</div>
+                <div class="kpi-value">{precio_min:.4f}</div>
+                <div class="kpi-delta">€/kWh</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-accent" style="background:var(--red)"></div>
+                <div class="kpi-label">Máximo período</div>
+                <div class="kpi-value">{precio_max:.4f}</div>
+                <div class="kpi-delta">€/kWh</div>
               </div>
               <div class="kpi">
                 <div class="kpi-accent" style="background:var(--purple)"></div>
-                <div class="kpi-label">Días precio alto (>120)</div>
-                <div class="kpi-value">{dias_alto}</div>
+                <div class="kpi-label">Variación media</div>
+                <div class="kpi-value" style="font-size:24px;color:{color_avg}">{var_avg:+.2f}%</div>
+                <div class="kpi-delta">▲ {n_sube} días · ▼ {n_baja} días</div>
+              </div>
+            </div>
+            <div class="kpi-row kpi-2" style="max-width:400px;margin-top:-16px">
+              <div class="kpi">
+                <div class="kpi-accent" style="background:var(--amber)"></div>
+                <div class="kpi-label">Estado vs histórico</div>
+                <div style="margin-top:6px"><span class="semaforo {sem_cls}">{sem_dot} {sem_val}</span></div>
               </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # Gráfico reactivo
-            h_plot = h.copy()
-            h_plot["fecha_d"] = h_plot["fecha"].dt.date
-            fig1 = go.Figure()
-            fig1.add_trace(go.Scatter(
-                x=h_plot["fecha_d"], y=h_plot["precio_medio"],
-                mode="lines+markers",
-                line=dict(color="#2dd4bf", width=2),
-                marker=dict(size=5, color="#2dd4bf"),
-                fill="tozeroy", fillcolor="rgba(45,212,191,0.08)",
-                name="Precio medio",
-            ))
-            fig1.update_layout(**PLOTLY_LAYOUT, height=300)
-            st.markdown('<div class="chart-box"><div class="chart-title">Precio medio diario · REE</div>', unsafe_allow_html=True)
-            st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
+            # Gráfico — reactivo al filtro
+            hist_plot = hist.copy()
+            hist_plot["fecha_d"] = hist_plot["fecha"].dt.date
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=hist_plot["fecha_d"], y=hist_plot["precio_max"],
+                fill=None, mode="lines", line=dict(color="rgba(0,0,0,0)", width=0),
+                showlegend=False, hoverinfo="skip"))
+            fig.add_trace(go.Scatter(x=hist_plot["fecha_d"], y=hist_plot["precio_min"],
+                fill="tonexty", fillcolor="rgba(45,212,191,0.07)",
+                mode="lines", line=dict(color="rgba(0,0,0,0)", width=0), name="Rango min/max"))
+            fig.add_trace(go.Scatter(x=hist_plot["fecha_d"], y=hist_plot["precio_medio"],
+                mode="lines+markers", line=dict(color="#2dd4bf", width=2),
+                marker=dict(size=5, color="#2dd4bf"), name="Precio medio"))
+            if "media_movil_7d" in hist_plot.columns:
+                fig.add_trace(go.Scatter(x=hist_plot["fecha_d"], y=hist_plot["media_movil_7d"],
+                    mode="lines", line=dict(color="#fbbf24", width=1.5, dash="dot"), name="Media móvil 7d"))
+            fig.update_layout(**PLOTLY_LAYOUT, height=300)
+            st.markdown('<div class="chart-box"><div class="chart-title">Evolución precio luz · €/kWh</div>', unsafe_allow_html=True)
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
             # Tabla con descarga integrada
-            with st.expander("Ver tabla de datos históricos"):
-                ht = h.sort_values("fecha", ascending=False).copy()
-                ht["fecha_d"] = ht["fecha"].dt.date
-                ht_show = ht[["fecha_d", "precio_medio", "demanda", "renovable_pct", "YY-MM", "YY-WW"]].copy()
-                ht_show.columns = ["Fecha", "Precio €/MWh", "Demanda MWh", "% Renovable", "Mes", "Semana"]
-                dc1, dc2 = st.columns([2, 5])
-                with dc1:
-                    st.download_button("⬇ CSV", csv_bytes(ht_show),
-                        csv_nombre("memo_ree"), "text/csv", key="dl_ree")
-                with dc2:
-                    st.caption(f"{len(ht_show)} registros")
-                st.markdown(tabla_html(ht_show), unsafe_allow_html=True)
+            with st.expander("Ver tabla histórica"):
+                tabla = hist.sort_values("fecha", ascending=False).copy()
+                tabla["var_str"] = tabla["var_p"].apply(
+                    lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
+                tabla["fecha_d"] = tabla["fecha"].dt.date
+                t_show = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var_str"]].copy()
+                t_show.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
+                ec1, ec2 = st.columns([2, 5])
+                with ec1:
+                    st.download_button("⬇ CSV", csv_bytes(t_show),
+                        csv_nombre("memo_energia"), "text/csv", key="dl_ene_tbl")
+                with ec2:
+                    st.caption(f"{len(t_show)} registros")
+                st.markdown(tabla_html(t_show), unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # TAB 2 — MERCADOS
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 with tab2:
-    st.markdown('<div class="section-label">Cotizaciones · Yahoo Finance</div>', unsafe_allow_html=True)
+    mkt = q("SELECT * FROM memo.v_mercados_resumen")
 
-    # ── KPIs estáticos mercados ───────────────────────────────────────────────
-    mkt_stat = q("SELECT * FROM memo.silver_stock_static")
-    if not mkt_stat.empty:
-        total = len(mkt_stat)
-        sube = (mkt_stat["change_pct"] > 0).sum()
-        baja = (mkt_stat["change_pct"] < 0).sum()
-        neut = total - sube - baja
+    if mkt.empty:
+        st.info("Sin datos de mercados.")
+    else:
+        # ── Filtro multiselect de categoría (misma línea que descarga) ──
+        cats = sorted(mkt["categoria"].unique().tolist())
+        st.markdown('<div class="section-label">Filtros</div>', unsafe_allow_html=True)
+        col_f, col_dl = st.columns([5, 2])
+        with col_f:
+            cat_sel = st.multiselect(
+                "Categoría", cats, default=[], key="mkt_cat",
+                placeholder="Todas las categorías"
+            )
+
+        df = apply_filter(mkt, "categoria", cat_sel)
+
+        # Descarga en la misma fila que el filtro
+        df_dl = df[["activo","categoria","precio_cierre","variacion_p","moneda","tendencia","fecha"]].copy()
+        df_dl["activo"] = df_dl["activo"].str.replace("_"," ")
+        with col_dl:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.download_button("⬇ CSV Mercados", csv_bytes(df_dl),
+                csv_nombre("memo_mercados"), "text/csv", key="dl_mkt")
+
+        # KPIs reactivos al filtro de categoría
+        n_sube  = len(df[df["tendencia"] == "SUBE"])
+        n_baja  = len(df[df["tendencia"] == "BAJA"])
+        n_est   = len(df[df["tendencia"] == "ESTABLE"])
+        var_avg = df["variacion_p"].mean()
+        color_avg = "#c4b5fd" if var_avg >= 0 else "#f87171"
+
         st.markdown(f"""
-        <div class="kpi-row kpi-4" style="margin-bottom:28px">
-          <div class="kpi">
-            <div class="kpi-accent" style="background:var(--teal)"></div>
-            <div class="kpi-label">Total valores</div>
-            <div class="kpi-value">{total}</div>
-          </div>
+        <div class="kpi-row kpi-4" style="margin-bottom:20px">
           <div class="kpi">
             <div class="kpi-accent" style="background:var(--green)"></div>
-            <div class="kpi-label">Al alza</div>
-            <div class="kpi-value">{sube}</div>
+            <div class="kpi-label">Activos al alza</div>
+            <div class="kpi-value">{n_sube}</div>
           </div>
           <div class="kpi">
             <div class="kpi-accent" style="background:var(--red)"></div>
-            <div class="kpi-label">A la baja</div>
-            <div class="kpi-value">{baja}</div>
+            <div class="kpi-label">Activos a la baja</div>
+            <div class="kpi-value">{n_baja}</div>
           </div>
           <div class="kpi">
-            <div class="kpi-accent" style="background:var(--amber)"></div>
-            <div class="kpi-label">Sin cambio</div>
-            <div class="kpi-value">{neut}</div>
+            <div class="kpi-accent" style="background:var(--muted)"></div>
+            <div class="kpi-label">Estables</div>
+            <div class="kpi-value">{n_est}</div>
           </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Histórico de mercados ─────────────────────────────────────────────────
-    st.markdown('<div class="section-label">Histórico de mercados</div>', unsafe_allow_html=True)
-    hist_mkt = q("SELECT * FROM memo.silver_stock_hist ORDER BY fecha, symbol")
-    if not hist_mkt.empty:
-        hist_mkt["fecha"] = pd.to_datetime(hist_mkt["fecha"])
-        hist_mkt = hist_mkt.sort_values(["fecha","symbol"]).reset_index(drop=True)
-        hist_mkt["var_pct"] = hist_mkt.groupby("symbol")["close"].pct_change() * 100
-        hist_mkt["YY-MM"] = hist_mkt["fecha"].dt.strftime("%Y-%m")
-        hist_mkt["YY-WW"] = hist_mkt["fecha"].dt.strftime("%Y-W%W")
-
-        # Filtros — CAMBIO: multiselect en lugar de selectbox
-        syms = sorted(hist_mkt["symbol"].unique())
-        meses_mkt = sorted(hist_mkt["YY-MM"].unique(), reverse=True)
-        weeks_mkt = sorted(hist_mkt["YY-WW"].unique(), reverse=True)
-
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            sel_sym = st.multiselect("Símbolo", syms, default=[], key="mkt_sym",
-                                      placeholder="Todos los símbolos")
-        with c2:
-            sel_mes_mkt = st.multiselect("Mes (YY-MM)", meses_mkt, default=[], key="mkt_mes",
-                                          placeholder="Todos los meses")
-        with c3:
-            sel_wk_mkt = st.multiselect("Semana (YY-WW)", weeks_mkt, default=[], key="mkt_wk",
-                                         placeholder="Todas las semanas")
-
-        hm = apply_filter(hist_mkt, "symbol", sel_sym)
-        hm = apply_filter(hm, "YY-MM", sel_mes_mkt)
-        hm = apply_filter(hm, "YY-WW", sel_wk_mkt)
-        hm = hm.sort_values(["fecha","symbol"]).reset_index(drop=True)
-
-        if not hm.empty:
-            # ── CAMBIO: PRIMERO GRÁFICO, DESPUÉS TABLA ───────────────────────
-            # Gráfico de líneas: Variación diaria %
-            fig2 = go.Figure()
-            for sym in hm["symbol"].unique():
-                df_sym = hm[hm["symbol"] == sym].copy()
-                df_sym["fecha_d"] = df_sym["fecha"].dt.date
-                fig2.add_trace(go.Scatter(
-                    x=df_sym["fecha_d"], y=df_sym["var_pct"],
-                    mode="lines+markers", name=sym, line=dict(width=2),
-                    marker=dict(size=4),
-                ))
-            fig2.update_layout(**PLOTLY_LAYOUT, height=320, showlegend=True,
-                               legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            st.markdown('<div class="chart-box"><div class="chart-title">Variación diaria % · histórico</div>', unsafe_allow_html=True)
-            st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            # Tabla de mercados con descarga
-            with st.expander("Ver tabla de mercados históricos"):
-                hmt = hm.sort_values("fecha", ascending=False).copy()
-                hmt["var_str"] = hmt["var_pct"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
-                hmt["fecha_d"] = hmt["fecha"].dt.date
-                hmt_show = hmt[["fecha_d","symbol","close","var_str","YY-MM","YY-WW"]].copy()
-                hmt_show.columns = ["Fecha","Símbolo","Cierre USD","Variación %","Mes","Semana"]
-                dc1, dc2 = st.columns([2, 5])
-                with dc1:
-                    st.download_button("⬇ CSV", csv_bytes(hmt_show),
-                        csv_nombre("memo_mercados"), "text/csv", key="dl_mkt")
-                with dc2:
-                    st.caption(f"{len(hmt_show)} registros")
-                st.markdown(tabla_html(hmt_show, "Variación %"), unsafe_allow_html=True)
-
-    # Tabla estática de mercados
-    with st.expander("Ver tabla resumen mercados (última cotización)"):
-        ms = mkt_stat.copy()
-        ms["var_str"] = ms["change_pct"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
-        ms_show = ms[["symbol","price","var_str","categoria"]].copy()
-        ms_show.columns = ["Símbolo","Precio USD","Var. día %","Categoría"]
-        st.markdown(tabla_html(ms_show, "Var. día %"), unsafe_allow_html=True)
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — EMPRESAS
-# ══════════════════════════════════════════════════════════════════════════════
-with tab3:
-    st.markdown('<div class="section-label">Carteras de valores</div>', unsafe_allow_html=True)
-
-    # ── Tabla agregada por empresa ───────────────────────────────────────────
-    portf = q("""
-        SELECT
-          empresa, categoria,
-          COUNT(*) AS n_valores,
-          SUM(posicion_actual_usd) AS total_usd
-        FROM memo.silver_portfolio_positions
-        GROUP BY empresa, categoria
-        ORDER BY total_usd DESC
-    """)
-    if not portf.empty:
-        total_inv = portf["total_usd"].sum()
-        n_emp = len(portf)
-        st.markdown(f"""
-        <div class="kpi-row kpi-2" style="max-width:620px;margin-bottom:28px">
           <div class="kpi">
             <div class="kpi-accent" style="background:var(--purple)"></div>
-            <div class="kpi-label">Inversión total</div>
-            <div class="kpi-value lg">${total_inv:,.0f}</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-accent" style="background:var(--teal)"></div>
-            <div class="kpi-label">Empresas en cartera</div>
-            <div class="kpi-value">{n_emp}</div>
+            <div class="kpi-label">Variación media</div>
+            <div class="kpi-value" style="font-size:24px;color:{color_avg}">{var_avg:+.2f}%</div>
           </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Tabla HTML con formato
-        html = '<table class="mkt-table"><thead><tr>'
-        html += '<th>Empresa</th><th>Categoría</th><th>Valores</th><th>Total USD</th>'
-        html += '</tr></thead><tbody>'
-        for _, row in portf.iterrows():
-            cat_cls = f"cat-{row['categoria']}" if pd.notna(row["categoria"]) else "cat-pill"
-            html += f"""
+        # ── GRÁFICO primero ──────────────────────────────────────────
+        df_sorted = df.sort_values("variacion_p")
+        colors = ["#f87171" if v < -2 else ("#c4b5fd" if v > 2 else "#a78bfa")
+                  for v in df_sorted["variacion_p"]]
+        fig2 = go.Figure(go.Bar(
+            x=df_sorted["variacion_p"],
+            y=df_sorted["activo"].str.replace("_"," "),
+            orientation="h", marker_color=colors,
+            text=[f"{v:+.2f}%" for v in df_sorted["variacion_p"]],
+            textposition="outside",
+            textfont=dict(size=11, family="Space Mono"),
+        ))
+        fig2.add_vline(x=0, line_color="rgba(255,255,255,0.15)", line_width=1)
+        fig2.update_layout(**PLOTLY_LAYOUT, height=max(280, len(df)*36))
+        st.markdown('<div class="chart-box"><div class="chart-title">Variación diaria %</div>', unsafe_allow_html=True)
+        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ── TABLA debajo del gráfico ─────────────────────────────────
+        rows_html = ""
+        for _, row in df.sort_values("categoria").iterrows():
+            var = row["variacion_p"]
+            if var > 2:    var_cell = f'<span style="color:#c4b5fd;font-weight:600">▲ {abs(var):.2f}%</span>'
+            elif var < -2: var_cell = f'<span style="color:#f87171;font-weight:600">▼ {abs(var):.2f}%</span>'
+            else:           var_cell = f'<span style="color:#c4b5fd">— {abs(var):.2f}%</span>'
+            cat_cls = f"cat-{row['categoria']}"
+            rows_html += f"""
             <tr>
-              <td><span class="mkt-sym">{row['empresa']}</span></td>
-              <td><span class="cat-pill {cat_cls}">{row['categoria'] or 'N/A'}</span></td>
-              <td>{row['n_valores']}</td>
-              <td class="mkt-val">${row['total_usd']:,.0f}</td>
-            </tr>
-            """
-        html += '</tbody></table>'
-        with st.expander("Ver detalle de carteras por empresa"):
-            st.markdown(html, unsafe_allow_html=True)
-            emp_df = portf.copy()
-            emp_df.columns = ["Empresa","Categoría","Valores","Total USD"]
-            dc1, dc2 = st.columns([2,5])
-            with dc1:
-                st.download_button("⬇ CSV", csv_bytes(emp_df),
-                    csv_nombre("memo_empresas"), "text/csv", key="dl_emp")
-            with dc2:
-                st.caption(f"{len(emp_df)} empresas")
+              <td><strong>{row['activo'].replace('_',' ')}</strong></td>
+              <td><span class="cat-pill {cat_cls}">{row['categoria']}</span></td>
+              <td class="price-mono">{row['precio_cierre']:,.4f}</td>
+              <td>{var_cell}</td>
+              <td style="color:var(--muted);font-size:12px">{row['moneda']}</td>
+            </tr>"""
 
-    # ── Posiciones individuales ───────────────────────────────────────────────
-    pos = q("SELECT * FROM memo.silver_portfolio_positions ORDER BY posicion_actual_usd DESC")
-    if not pos.empty:
-        with st.expander("Ver todas las posiciones"):
-            pos_show = pos[["empresa","symbol","cantidad","precio_compra_usd","posicion_actual_usd","categoria"]].copy()
-            pos_show.columns = ["Empresa","Símbolo","Cantidad","Precio compra USD","Posición USD","Categoría"]
-            st.markdown(tabla_html(pos_show), unsafe_allow_html=True)
-            dc1, dc2 = st.columns([2,5])
-            with dc1:
-                st.download_button("⬇ CSV posiciones", csv_bytes(pos_show),
-                    csv_nombre("memo_posiciones"), "text/csv", key="dl_pos")
-            with dc2:
-                st.caption(f"{len(pos_show)} posiciones")
+        st.markdown(f"""
+        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px">
+          <table class="mkt-table">
+            <thead><tr>
+              <th>Activo</th><th>Categoría</th><th>Precio cierre</th>
+              <th>Variación</th><th>Moneda</th>
+            </tr></thead>
+            <tbody>{rows_html}</tbody>
+          </table>
+        </div>
+        """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — MACROECONOMÍA
-# ══════════════════════════════════════════════════════════════════════════════
-with tab4:
-    st.markdown('<div class="section-label">Indicadores macroeconómicos</div>', unsafe_allow_html=True)
-
-    # ── Datos macro estáticos (EUR/USD + IPC) ─────────────────────────────────
-    macro = q("SELECT * FROM memo.bronze_macro WHERE fecha = (SELECT MAX(fecha) FROM memo.bronze_macro)")
-    hist_div = q("SELECT fecha, tasa FROM memo.silver_divisa_hist ORDER BY fecha")
+# ════════════════════════════════════════════════════════════
+# TAB 3 — MACRO
+# ════════════════════════════════════════════════════════════
+with tab3:
+    macro    = q("SELECT * FROM memo.v_macro_resumen")
+    hist_div = q("SELECT fecha, tasa FROM memo.bronze_divisa WHERE par='EUR/USD' ORDER BY fecha ASC")
 
     if not macro.empty:
+        st.markdown('<div class="section-label">Indicadores macroeconómicos</div>', unsafe_allow_html=True)
         cards_html = ""
         for _, row in macro.iterrows():
             if "USD" in str(row["indicador"]):
