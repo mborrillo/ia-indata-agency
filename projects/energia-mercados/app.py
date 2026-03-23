@@ -12,6 +12,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  CONFIGURACIÓN GENERAL DE LA PÁGINA                            ║
+# ║  page_title  → texto que aparece en la pestaña del navegador   ║
+# ║  page_icon   → emoji o URL de imagen que aparece en la pestaña ║
+# ║  layout      → "wide" usa todo el ancho | "centered" centra    ║
+# ╚══════════════════════════════════════════════════════════════════╝
 st.set_page_config(
     page_title="MEMO · Energía & Mercados",
     page_icon="⚡",
@@ -22,23 +28,46 @@ st.set_page_config(
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+/* FUENTES — cambiar aquí para usar otras tipografías de Google Fonts
+   Space Mono: números y valores (monoespaciada, estilo terminal)
+   DM Sans: textos y etiquetas (legible, moderna)
+   Para cambiar: reemplaza el nombre en la URL y en font-family */
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
+/* ════════════════════════════════════════════════════════════════
+   PALETA DE COLORES — edita aquí para cambiar colores globalmente
+   Todos los elementos de la app usan estas variables.
+   ════════════════════════════════════════════════════════════════ */
 :root {
+    /* Fondo base — el más oscuro. Cambiar para modo claro: #f8fafc */
     --bg:     #080a0f;
+    /* Fondo de cards y paneles — una capa más clara que --bg */
     --bg2:    #0f1219;
+    /* Fondo en hover y estados activos */
     --bg3:    #171b26;
+    /* Fondo más claro — filas de tabla en hover */
     --bg4:    #1f2433;
+    /* Borde por defecto — opacidad baja (sutil) */
     --bdr:    rgba(255,255,255,0.06);
+    /* Borde en hover — más visible */
     --bdr2:   rgba(255,255,255,0.13);
+    /* Color principal — logo, acentos, links */
     --teal:   #2dd4bf;
+    /* Color secundario — tabs activos, variaciones, botones */
     --purple: #c4b5fd;
+    /* Advertencia — semáforo NORMAL, precios en rango */
     --amber:  #fbbf24;
+    /* Alerta — semáforo ALTO, variaciones negativas */
     --red:    #f87171;
+    /* Solo para semáforos de estado BAJO/VERDE (buena noticia) */
     --green:  #34d399;
+    /* Texto principal — blanco suave. Más blanco: #ffffff */
     --text:   #f1f5f9;
+    /* Texto secundario */
     --text2:  #cbd5e1;
+    /* Texto terciario — captions, labels de KPI */
     --dim:    #94a3b8;
+    /* Texto muy apagado — pie de página, separadores */
     --muted:  #475569;
 }
 
@@ -58,7 +87,10 @@ html, body, .stApp,
 
 .block-container { padding: 2.5rem 3rem 5rem !important; max-width: 1360px !important; }
 
-/* ── Header ── */
+/* ── HEADER ── Logo, subtítulo y badge "LIVE"
+   .memo-logo / .hdr-logo → tamaño y color del nombre de la app
+   .memo-sub  / .hdr-sub  → subtítulo bajo el logo
+   .memo-badge / .hdr-badge → píldora "LIVE" arriba a la derecha */
 .memo-header {
     display: flex; align-items: center; gap: 14px;
     padding-bottom: 22px; border-bottom: 1px solid var(--bdr); margin-bottom: 28px;
@@ -67,11 +99,20 @@ html, body, .stApp,
 .memo-sub  { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; }
 .memo-badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--teal); background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.2); padding: 5px 12px; border-radius: 20px; }
 
-/* ── Section label ── */
+/* ── SEPARADORES DE SECCIÓN — línea con texto en mayúsculas
+   font-size → tamaño del texto del separador
+   color     → usa --dim para sutil o --text para destacado */
 .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .section-label::after { content: ''; flex: 1; height: 1px; background: var(--bdr); }
 
-/* ── KPI Cards ── */
+/* ── TARJETAS KPI ─────────────────────────────────────────────
+   .kpi-row.k4 → grid de 4 columnas | .k3 → 3 | .k2 → 2
+   .kpi        → tarjeta completa: border-radius para redondeo
+   .kpi-accent → barra de color de 2px en la parte superior
+   .kpi-label  → etiqueta pequeña arriba (ej. "PRECIO MEDIO HOY")
+   .kpi-value  → número grande principal | .lg → versión más grande
+   .kpi-delta  → texto pequeño debajo del valor principal
+   .kpi-delta.up / .down → colores para delta positivo/negativo */
 .kpi-row { display: grid; gap: 12px; margin-bottom: 28px; }
 .kpi-4 { grid-template-columns: repeat(4, 1fr); }
 .kpi-3 { grid-template-columns: repeat(3, 1fr); }
@@ -86,13 +127,21 @@ html, body, .stApp,
 .kpi-delta.up   { color: var(--green); }
 .kpi-delta.down { color: var(--red); }
 
-/* ── Semáforo ── */
+/* ── SEMÁFOROS DE ESTADO — píldoras de color
+   .sem-bajo / .sem-verde   → estado favorable (verde)
+   .sem-normal / .sem-amarillo → estado neutro (ámbar)
+   .sem-alto / .sem-rojo    → estado desfavorable (rojo)
+   Para cambiar colores: editar background, color y border */
 .semaforo { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; letter-spacing: 0.05em; padding: 6px 14px; border-radius: 20px; margin-top: 4px; }
 .sem-bajo   { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
 .sem-normal { background: rgba(251,191,36,0.10);  color: var(--amber); border: 1px solid rgba(251,191,36,0.22); }
 .sem-alto   { background: rgba(248,113,113,0.10); color: var(--red);   border: 1px solid rgba(248,113,113,0.22); }
 
-/* ── Mercados table ── */
+/* ── TABLA DE DATOS ────────────────────────────────────────────
+   .mkt-table th → cabeceras: font-size, color, padding
+   .mkt-table td → celdas: font-size, color, padding
+   .cat-pill     → píldoras de categoría en la tabla
+   Cada .cat-[nombre] tiene su propio color de fondo y texto */
 .mkt-table { width: 100%; border-collapse: collapse; }
 .mkt-table th { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--bdr); text-align: left; }
 .mkt-table td { padding: 12px 14px; border-bottom: 1px solid var(--bdr); font-size: 13px; color: var(--text); }
@@ -106,13 +155,21 @@ html, body, .stApp,
 .cat-Divisa       { background: rgba(255,255,255,0.07); color: var(--dim); }
 .price-mono { font-family: 'Space Mono', monospace; font-size: 13px; }
 
-/* ── Nav tabs ── */
+/* ── PESTAÑAS DE NAVEGACIÓN ────────────────────────────────────
+   [role="tablist"] → contenedor de las pestañas
+   [role="tab"]     → pestaña inactiva: color del texto
+   [aria-selected="true"] → pestaña activa: color y fondo
+   Para cambiar color activo: editar color: var(--purple) */
 [data-testid="stTabs"] [role="tablist"] { background: var(--bg2) !important; border: 1px solid var(--bdr) !important; border-radius: 10px !important; padding: 4px !important; gap: 2px !important; margin-bottom: 24px; }
 [data-testid="stTabs"] [role="tab"] { background: transparent !important; border: none !important; color: var(--muted) !important; font-family: 'DM Sans', sans-serif !important; font-size: 13px !important; font-weight: 500 !important; padding: 8px 18px !important; border-radius: 7px !important; transition: all 0.15s !important; }
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] { background: var(--bg3) !important; color: var(--purple) !important; border: 1px solid rgba(196,181,253,0.2) !important; }
 [data-testid="stTabs"] [role="tab"]:hover:not([aria-selected="true"]) { color: var(--text) !important; background: rgba(255,255,255,0.04) !important; }
 
-/* ── Multiselect & Selectbox violeta ── */
+/* ── FILTROS Y DESPLEGABLES ────────────────────────────────────
+   [data-baseweb="tag"]   → etiqueta seleccionada en multiselect
+   [data-baseweb="menu"]  → menú desplegable de opciones
+   :focus-within          → borde al enfocar el selector
+   Para cambiar color: reemplazar rgba(196,181,253,...) por otro color */
 [data-testid="stMultiSelect"] [data-baseweb="tag"] { background-color: rgba(196,181,253,0.15) !important; border: 1px solid rgba(196,181,253,0.35) !important; color: #c4b5fd !important; border-radius: 6px !important; }
 [data-testid="stMultiSelect"] [data-baseweb="tag"] span,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] [aria-label="Remove"] { color: #c4b5fd !important; }
@@ -126,19 +183,31 @@ html, body, .stApp,
 [data-baseweb="menu"] li:hover,
 [data-baseweb="menu"] [aria-selected="true"] { background: rgba(196,181,253,0.1) !important; color: #c4b5fd !important; }
 
-/* ── Download button ── */
+/* ── BOTÓN DE DESCARGA CSV ─────────────────────────────────────
+   button        → estilo del botón en reposo
+   button:hover  → estilo al pasar el ratón
+   color         → color del texto del botón
+   border-radius → redondeo de las esquinas */
 [data-testid="stDownloadButton"] button { background: var(--bg3) !important; border: 1px solid var(--bdr2) !important; color: var(--purple) !important; border-radius: 8px !important; font-size: 12px !important; padding: 6px 14px !important; transition: all 0.15s !important; }
 [data-testid="stDownloadButton"] button:hover { border-color: rgba(196,181,253,0.4) !important; background: rgba(196,181,253,0.08) !important; }
 
-/* ── Expander ── */
+/* ── ACORDEONES / EXPANDERS ────────────────────────────────────
+   summary:hover → color del título al pasar el ratón
+   details       → fondo y borde del contenido expandido */
 [data-testid="stExpander"] summary:hover { color: #c4b5fd !important; }
 [data-testid="stExpander"] details { background: var(--bg2) !important; border: 1px solid var(--bdr) !important; border-radius: 10px !important; }
 
-/* ── Chart containers ── */
+/* ── CONTENEDORES DE GRÁFICOS ──────────────────────────────────
+   .chart-box / .cbox  → tarjeta que envuelve el gráfico
+   .chart-title / .ctitle → título pequeño sobre el gráfico
+   Para quitar el borde: eliminar la línea border: ... */
 .chart-box { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 12px; padding: 20px 20px 12px; margin-bottom: 16px; }
 .chart-title { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
 
-/* ── Footer ── */
+/* ── PIE DE PÁGINA ─────────────────────────────────────────────
+   .memo-footer / .ftr → contenedor del footer
+   .footer-left / .ftxt → texto izquierdo (nombre agencia + link)
+   .source-tag / .ftag  → etiquetas de fuentes de datos */
 .memo-footer { border-top: 1px solid var(--bdr); padding-top: 20px; margin-top: 40px; display: flex; align-items: center; justify-content: space-between; }
 .footer-left { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
 .footer-sources { display: flex; gap: 12px; }
@@ -250,9 +319,10 @@ with tab1:
 
         # ── Filtros (fuera del expander — reactivos) ──
         st.markdown('<div class="section-label">Filtros</div>', unsafe_allow_html=True)
-        fc1, fc2 = st.columns(2)
         meses_e = sorted(hist_raw["YY-MM"].unique(), reverse=True)
         weeks_e = sorted(hist_raw["YY-WW"].unique(), reverse=True)
+        # Filtros + descarga en la misma fila
+        fc1, fc2, fc3 = st.columns([3, 3, 2])
         with fc1:
             sel_mes_e = st.multiselect("Mes (YY-MM)", meses_e, default=[], key="e_mes",
                                         placeholder="Todos los meses")
@@ -260,6 +330,12 @@ with tab1:
             sel_wk_e  = st.multiselect("Semana (YY-WW)", weeks_e, default=[], key="e_wk",
                                         placeholder="Todas las semanas")
 
+        with fc3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            hist_dl = hist_raw.copy()
+            hist_dl["fecha"] = hist_dl["fecha"].dt.date
+            st.download_button("⬇ CSV Energía", csv_bytes(hist_dl),
+                "memo_energia.csv", "text/csv", key="dl_ene")
         # Datos filtrados para tarjetas, gráfico y tabla
         hist = hist_raw.copy()
         hist = apply_filter(hist, "YY-MM", sel_mes_e)
@@ -358,12 +434,7 @@ with tab1:
                 t_show = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var_str"]].copy()
                 t_show.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
                 st.markdown(tabla_html(t_show), unsafe_allow_html=True)
-                dl_col, info_col = st.columns([1, 4])
-                with dl_col:
-                    st.download_button("⬇ Descargar CSV", csv_bytes(t_show),
-                        "memo_energia.csv", "text/csv", key="dl_energia")
-                with info_col:
-                    st.caption(f"{len(t_show)} registros")
+                st.caption(f"{len(t_show)} registros")
 
 # ════════════════════════════════════════════════════════════
 # TAB 2 — MERCADOS
@@ -375,7 +446,7 @@ with tab2:
         st.info("Sin datos de mercados.")
     else:
         cats = ["Todas"] + sorted(mkt["categoria"].unique().tolist())
-        col_f, _ = st.columns([2, 5])
+        col_f, col_dl, _ = st.columns([3, 2, 2])
         with col_f:
             cat_sel = st.selectbox("Categoría", cats, label_visibility="collapsed")
 
@@ -442,11 +513,13 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-        # Descarga tabla mercados
+        # Descarga en la misma fila que el filtro
         df_dl = df[["activo","categoria","precio_cierre","variacion_p","moneda","tendencia","fecha"]].copy()
         df_dl["activo"] = df_dl["activo"].str.replace("_"," ")
-        st.download_button("⬇ Descargar CSV", csv_bytes(df_dl),
-            "memo_mercados.csv", "text/csv", key="dl_mkt")
+        with col_dl:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.download_button("⬇ CSV Mercados", csv_bytes(df_dl),
+                "memo_mercados.csv", "text/csv", key="dl_mkt")
 
         # Gráfico barras reactivo
         df_sorted = df.sort_values("variacion_p")
@@ -506,15 +579,19 @@ with tab3:
 
         # Filtros macro
         st.markdown('<div class="section-label">Filtros EUR/USD</div>', unsafe_allow_html=True)
-        mc1, mc2 = st.columns(2)
         meses_m = sorted(hist_div["YY-MM"].unique(), reverse=True)
         weeks_m = sorted(hist_div["YY-WW"].unique(), reverse=True)
+        mc1, mc2, mc3 = st.columns([3, 3, 2])
         with mc1:
             sel_mes_m = st.multiselect("Mes (YY-MM)", meses_m, default=[], key="m_mes",
                                         placeholder="Todos los meses")
         with mc2:
             sel_wk_m  = st.multiselect("Semana (YY-WW)", weeks_m, default=[], key="m_wk",
                                         placeholder="Todas las semanas")
+        with mc3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.download_button("⬇ CSV EUR/USD", csv_bytes(hist_div),
+                "memo_eurusd.csv", "text/csv", key="dl_div_top")
 
         hd = apply_filter(hist_div, "YY-MM", sel_mes_m)
         hd = apply_filter(hd, "YY-WW", sel_wk_m)
@@ -581,14 +658,9 @@ with tab3:
                 td_show = td[["fecha_d","tasa","var_str","YY-MM","YY-WW"]].copy()
                 td_show.columns = ["Fecha","EUR/USD","Variación %","Mes","Semana"]
                 st.markdown(tabla_html(td_show), unsafe_allow_html=True)
-                dl2, info2 = st.columns([1,4])
-                with dl2:
-                    st.download_button("⬇ Descargar CSV", csv_bytes(td_show),
-                        "memo_eurusd.csv", "text/csv", key="dl_div")
-                with info2:
-                    st.caption(f"{len(td_show)} registros")
+                st.caption(f"{len(td_show)} registros")
 
-    # Tabla IPC
+    # Tabla IPC — descarga en el label de sección
     hist_ipc = q("""
         SELECT fecha, valor FROM memo.bronze_macro
         WHERE indicador = 'IPC_GENERAL_ESP' ORDER BY fecha DESC
@@ -606,11 +678,11 @@ with tab3:
             ti_show = ti[["fecha_f","valor","var_str"]].copy()
             ti_show.columns = ["Período","IPC var. anual %","Variación vs anterior %"]
             st.markdown(tabla_html(ti_show, "Variación vs anterior %"), unsafe_allow_html=True)
-            dl3, info3 = st.columns([1,4])
-            with dl3:
-                st.download_button("⬇ Descargar CSV", csv_bytes(ti_show),
+            ipc_c1, ipc_c2 = st.columns([2, 5])
+            with ipc_c1:
+                st.download_button("⬇ CSV IPC", csv_bytes(ti_show),
                     "memo_ipc.csv", "text/csv", key="dl_ipc")
-            with info3:
+            with ipc_c2:
                 st.caption(f"{len(ti_show)} registros")
 
 # ── Footer ────────────────────────────────────────────────────────────────────
