@@ -68,7 +68,7 @@ st.markdown("""
     /* Texto terciario — captions, labels de KPI */
     --dim:    #94a3b8;
     /* Texto muy apagado — pie de página, separadores */
-    --muted:  #475569;
+    --muted:  #94a3b8; #475569
 }
 html, body, .stApp,
 [data-testid="stAppViewContainer"],
