@@ -169,9 +169,28 @@ Edita las variables en `:root` — afectan a toda la app:
 | Fondo general | `:root` → `--bg` |
 | Borde de cards | `:root` → `--bdr` y `--bdr2` |
 
+### Fuentes tipográficas
+- **Título de la app** (`.memo-logo` / `.hdr-logo`): `DM Sans` — legible, moderna
+- **Números y valores KPI** (`.kpi-value`): `Space Mono` — se mantiene, es numérico
+- **Regla:** nunca usar `Space Mono` para texto largo o títulos principales
+
+### Color --muted
+- Valor: `#94a3b8` (era `#475569`, demasiado oscuro en dark mode)
+- Usar `#94a3b8` para subtítulos, labels de KPI, texto de footer
+- Para texto aún más apagado usar `--dim` (#94a3b8 ya era --dim — ver nota abajo)
+- **Nota:** `--dim` y `--muted` se unificaron visualmente; `--muted` subió de tono
+
 ### Botón de descarga CSV
-Siempre en la **misma fila que los filtros** (columna `fc3` o `col_dl`).
-Nunca al final de la tabla — el usuario no debe hacer scroll para encontrarlo.
+- Siempre en la **misma fila que los filtros** (columna `fc3` o `col_dl`)
+- Nunca al final de la tabla — el usuario no debe hacer scroll
+- **Nombre del archivo:** siempre con formato `seccion_YYYY-MM-DD.csv` usando `csv_nombre("seccion")`
+- **Contenido:** siempre ordenado por fecha descendente usando `df_para_csv(df)`
+- Helpers disponibles en todos los `app.py`: `csv_nombre()` y `df_para_csv()`
+
+### Tablas históricas
+- Usar siempre `tabla_html()` — preserva colores de variación (verde/rojo/violeta)
+- **No usar** `st.dataframe()` para tablas con variaciones — pierde los colores
+- Orden dentro de la tabla: siempre fecha descendente (`sort_values("fecha", ascending=False)`)
 
 ### Modo claro (si quisieras cambiar el tema)
 Cambiar en `:root`:
@@ -192,25 +211,3 @@ Cambiar en `:root`:
 - [ ] Primer post LinkedIn sobre el proceso de construcción de MEMO Hostelería
 - [ ] Primer contacto con cliente piloto en Badajoz (hostelería o cooperativa)
 - [ ] Revisar MEMO Hostelería — posibles mejoras pendientes
-
----
-
-## Decisiones de arquitectura futura
-
-### Capa de datos compartida (shared-datalake)
-**Cuándo implementar:** cuando haya 3+ proyectos activos y se esté
-copiando el mismo ETL por tercera vez.
-
-**Concepto:** un proyecto Neon `shared-datalake` con schema `shared`
-concentra todas las fuentes públicas. Cada proyecto solo ingesta
-sus fuentes específicas de sector y lee el resto de `shared.*`.
-
-**Impacto cuando se implemente:**
-- Nuevo proyecto en Neon: `shared-datalake` (schema `shared`)
-- Nuevo workflow diario compartido en `.github/workflows/shared_datalake.yml`
-- ETLs comunes (PVPC, IPC, BCE, Yahoo Finance) se mueven a `shared-datalake/etl/`
-- Proyectos actuales: eliminar ETLs duplicados, actualizar queries de vistas Gold
-- `app.py` y specs no cambian — el dashboard no sabe de dónde vienen los datos
-
-**Fuentes candidatas a compartir:** PVPC · IPC General · IPC Alimentación ·
-EUR/USD (BCE) · Yahoo Finance (tickers macro) · Gas NG=F
