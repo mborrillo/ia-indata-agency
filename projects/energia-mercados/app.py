@@ -341,7 +341,7 @@ st.markdown("""
   <div class="memo-header" style="margin-bottom:0;padding-bottom:12px;border-bottom:none">
     <div>
       <div class="memo-logo">⚡ MEMO</div>
-      <div class="memo-sub">Monitor de Empresas &amp; Mercados Operativos · ia-indata Agency</div>
+      <div class="memo-sub">Monitor para Empresas &amp; Mercados Operativos · ia-indata Agency</div>
     </div>
     <div class="memo-badge">● LIVE · datos diarios</div>
   </div>
