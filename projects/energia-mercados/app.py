@@ -445,7 +445,7 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # Tabla con descarga
+            # Tabla con descarga integrada
             with st.expander("Ver tabla histórica"):
                 tabla = hist.sort_values("fecha", ascending=False).copy()
                 tabla["var_str"] = tabla["var_p"].apply(
@@ -453,8 +453,13 @@ with tab1:
                 tabla["fecha_d"] = tabla["fecha"].dt.date
                 t_show = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var_str"]].copy()
                 t_show.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
+                ec1, ec2 = st.columns([2, 5])
+                with ec1:
+                    st.download_button("⬇ CSV", csv_bytes(t_show),
+                        csv_nombre("memo_energia"), "text/csv", key="dl_ene_tbl")
+                with ec2:
+                    st.caption(f"{len(t_show)} registros")
                 st.markdown(tabla_html(t_show), unsafe_allow_html=True)
-                st.caption(f"{len(t_show)} registros")
 
 # ════════════════════════════════════════════════════════════
 # TAB 2 — MERCADOS
@@ -670,15 +675,20 @@ with tab3:
             st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # Tabla EUR/USD con descarga
+            # Tabla EUR/USD con descarga integrada
             with st.expander("Ver tabla histórica EUR/USD"):
                 td = hd.sort_values("fecha", ascending=False).copy()
                 td["var_str"] = td["variacion_p"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
                 td["fecha_d"] = td["fecha"].dt.date
                 td_show = td[["fecha_d","tasa","var_str","YY-MM","YY-WW"]].copy()
                 td_show.columns = ["Fecha","EUR/USD","Variación %","Mes","Semana"]
+                dc1, dc2 = st.columns([2, 5])
+                with dc1:
+                    st.download_button("⬇ CSV", csv_bytes(td_show),
+                        csv_nombre("memo_eurusd"), "text/csv", key="dl_div_tbl")
+                with dc2:
+                    st.caption(f"{len(td_show)} registros")
                 st.markdown(tabla_html(td_show), unsafe_allow_html=True)
-                st.caption(f"{len(td_show)} registros")
 
     # Tabla IPC — descarga en el label de sección
     hist_ipc = q("""
