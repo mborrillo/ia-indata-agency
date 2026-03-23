@@ -1,3 +1,8 @@
+Aquí tienes el archivo completo corregido. He renombrado la variable conflictiva del **Tab 4** a `txt_color` para que no sobreescriba tu función `color_var` y la tabla se dibuje sin errores. 
+
+Puedes copiar y pegar este bloque directamente en tu entorno de producción:
+
+```python
 """
 MEMO Hostelería — Monitor de Costes para Restauración
 ia indata agency · Badajoz, Extremadura
@@ -522,11 +527,11 @@ with tab4:
             import math
             if len(filt) < 2 or math.isnan(var_med):
                 var_display  = "Sin histórico suficiente"
-                color_var    = "var(--muted)"
+                txt_color    = "var(--muted)" # Variable renombrada para no sobreescribir la función
                 var_fontsize = "14px"
             else:
                 var_display  = f"{var_med:+.2f}%"
-                color_var    = "var(--purple)" if var_med <= 0 else "var(--red)"
+                txt_color    = "var(--purple)" if var_med <= 0 else "var(--red)" # Variable renombrada
                 var_fontsize = "22px"
 
             st.markdown(f"""
@@ -542,7 +547,7 @@ with tab4:
                 <div class="kval">{pmax:.4f}</div></div>
               <div class="kpi"><div class="kacc" style="background:var(--purple)"></div>
                 <div class="klbl">Variación media diaria</div>
-                <div class="kval" style="font-size:{var_fontsize};color:{color_var}">{var_display}</div></div>
+                <div class="kval" style="font-size:{var_fontsize};color:{txt_color}">{var_display}</div></div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -597,3 +602,6 @@ st.markdown("""
   </div>
 </div>
 """, unsafe_allow_html=True)
+```
+
+¿Te gustaría que probáramos a implementar la navegación fija en este mismo código una vez validado que funciona correctamente?
