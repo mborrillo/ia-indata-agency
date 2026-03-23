@@ -139,6 +139,20 @@ html, body, .stApp,
 .ftxt { font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; }
 .ftags { display:flex; gap:10px; }
 .ftag { font-size:10px; color:var(--muted); background:var(--bg2); border:1px solid var(--bdr); padding:3px 9px; border-radius:4px; text-transform:uppercase; letter-spacing:.05em; }
+
+/* ── FILTROS Y DESPLEGABLES ────────────────────────────────────────────────
+   Tags seleccionados en violeta — no rojo por defecto de Streamlit */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] { background-color:rgba(196,181,253,.15) !important; border:1px solid rgba(196,181,253,.35) !important; color:#c4b5fd !important; border-radius:6px !important; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] [aria-label="Remove"] { color:#c4b5fd !important; }
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child,
+[data-baseweb="select"] > div:first-child { background:var(--bg2) !important; border:1px solid var(--bdr2) !important; border-radius:8px !important; color:var(--text) !important; }
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child:focus-within,
+[data-baseweb="select"] > div:first-child:focus-within { border-color:rgba(196,181,253,.5) !important; box-shadow:0 0 0 2px rgba(196,181,253,.12) !important; }
+[data-baseweb="popover"] [data-baseweb="menu"] { background:var(--bg3) !important; border:1px solid var(--bdr2) !important; border-radius:8px !important; }
+[data-baseweb="menu"] li { color:var(--text) !important; }
+[data-baseweb="menu"] li:hover,
+[data-baseweb="menu"] [aria-selected="true"] { background:rgba(196,181,253,.1) !important; color:#c4b5fd !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -187,6 +201,43 @@ def df_para_csv(df):
             except Exception:
                 pass
     return df
+
+
+def color_var(v):
+    """HTML con color según signo de variación."""
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return '<span style="color:#c4b5fd">—</span>'
+    try:
+        n = float(str(v).replace("%","").replace("+",""))
+        if n > 0:  return f'<span style="color:#c4b5fd;font-weight:600">▲ {n:.2f}%</span>'
+        if n < 0:  return f'<span style="color:#f87171;font-weight:600">▼ {abs(n):.2f}%</span>'
+        return f'<span style="color:#c4b5fd">— {n:.2f}%</span>'
+    except Exception:
+        return f'<span style="color:#c4b5fd">{v}</span>'
+
+
+def tabla_html(df, col_var="Variación %"):
+    """Tabla HTML con variación coloreada."""
+    cols = list(df.columns)
+    ths  = "".join(f"<th>{c}</th>" for c in cols)
+    rows = ""
+    for _, row in df.iterrows():
+        tds = ""
+        for c in cols:
+            val = row[c]
+            if c == col_var:
+                tds += f"<td>{color_var(val)}</td>"
+            else:
+                tds += f"<td>{val}</td>"
+        rows += f"<tr>{tds}</tr>"
+    return f"""
+    <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-top:8px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">{ths}</tr></thead>
+        <tbody style="font-size:13px;color:var(--text)">{rows}</tbody>
+      </table>
+    </div>"""
+
 
 def sem_class(s: str) -> str:
     return {"VERDE":"sem-verde","AMARILLO":"sem-amarillo","ROJO":"sem-rojo",
