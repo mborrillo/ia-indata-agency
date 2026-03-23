@@ -561,9 +561,9 @@ with tab4:
 
             with st.expander("Ver tabla completa"):
                 tabla = filt.sort_values("fecha", ascending=False).copy()
-                tabla["var_str"] = tabla["var"].apply(lambda x: f"{x:+.2f}%" if pd.notna(x) else "—")
                 tabla["fecha_d"] = tabla["fecha"].dt.date
-                t = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var_str"]].copy()
+                # Pasar variación como número — color_var la formatea con color
+                t = tabla[["fecha_d","precio_medio","precio_min","precio_max","media_movil_7d","YY-MM","YY-WW","var"]].copy()
                 t.columns = ["Fecha","Precio medio","Mínimo","Máximo","Media 7d","Mes","Semana","Variación %"]
                 hc1, hc2 = st.columns([2, 5])
                 with hc1:
