@@ -1,6 +1,6 @@
 """
 MEMO Hostelería — Monitor de Costes para Restauración
-ia indata agency · Badajoz, Extremadura
+ia-indata Agency · Badajoz, Extremadura
 
 Diseño: sin jerga financiera. Todo en lenguaje de hostelero.
 Regla de oro: cualquier KPI debe entenderse en menos de 5 segundos.
@@ -134,6 +134,31 @@ html, body, .stApp,
 .cbox { background:var(--bg2); border:1px solid var(--bdr); border-radius:12px; padding:20px 20px 12px; margin-bottom:16px; }
 .ctitle { font-size:11px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); margin-bottom:4px; }
 
+
+/* ── HEADER FIJO — siempre visible al hacer scroll ─────────────────────
+   Ancla el header al top de la ventana y añade padding al contenido
+   para que no quede tapado por el header flotante.
+   top → distancia desde arriba (ajustar si hay toolbar de Streamlit)
+   z-index → debe ser alto para quedar sobre el contenido */
+.hdr, .memo-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 999 !important;
+    background: var(--bg) !important;
+    padding: 14px 3rem !important;
+    border-bottom: 1px solid var(--bdr) !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 14px !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+/* Compensar el espacio que ocupa el header fijo */
+.block-container {
+    padding-top: 90px !important;
+}
+
 /* Footer */
 .ftr { border-top:1px solid var(--bdr); padding-top:20px; margin-top:40px; display:flex; align-items:center; justify-content:space-between; }
 .ftxt { font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; }
@@ -170,9 +195,6 @@ def q(sql: str) -> pd.DataFrame:
         with get_engine().connect() as conn:
             return pd.read_sql(text(sql), conn)
     except Exception as e:
-        # En caso de error de conexión o consulta, devolvemos DataFrame vacío
-        # para que la app muestre "Sin datos" sin romperse.
-        st.warning(f"Error al consultar datos: {e}")
         return pd.DataFrame()
 
 PLOTLY = dict(
@@ -271,7 +293,7 @@ st.markdown("""
 <div class="hdr">
   <div>
     <div class="hdr-logo">🍳 MEMO Hostelería</div>
-    <div class="hdr-sub">Monitor para Empresas &amp; Mercados Operativos · Hostelería · ia-indata agency</div>
+    <div class="hdr-sub">Monitor de Empresas &amp; Mercados Operativos · Hostelería · ia-indata Agency</div>
   </div>
   <div class="hdr-badge">● LIVE · actualización diaria</div>
 </div>
@@ -522,11 +544,11 @@ with tab4:
             import math
             if len(filt) < 2 or math.isnan(var_med):
                 var_display  = "Sin histórico suficiente"
-                txt_color    = "var(--muted)" # Variable renombrada para no sobreescribir la función
+                color_var    = "var(--muted)"
                 var_fontsize = "14px"
             else:
                 var_display  = f"{var_med:+.2f}%"
-                txt_color    = "var(--purple)" if var_med <= 0 else "var(--red)" # Variable renombrada
+                color_var    = "var(--purple)" if var_med <= 0 else "var(--red)"
                 var_fontsize = "22px"
 
             st.markdown(f"""
@@ -542,7 +564,7 @@ with tab4:
                 <div class="kval">{pmax:.4f}</div></div>
               <div class="kpi"><div class="kacc" style="background:var(--purple)"></div>
                 <div class="klbl">Variación media diaria</div>
-                <div class="kval" style="font-size:{var_fontsize};color:{txt_color}">{var_display}</div></div>
+                <div class="kval" style="font-size:{var_fontsize};color:{color_var}">{var_display}</div></div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -585,7 +607,7 @@ with tab4:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="ftr">
-  <div class="ftxt">ia indata agency · MEMO Hostelería ·
+  <div class="ftxt">ia-indata Agency · MEMO Hostelería ·
     <a href="https://github.com/mborrillo/ia-indata-agency"
        style="color:var(--teal);text-decoration:none">GitHub ↗</a>
   </div>
