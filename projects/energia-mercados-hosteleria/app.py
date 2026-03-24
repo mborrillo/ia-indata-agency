@@ -82,7 +82,7 @@ html, body, .stApp,
 [data-testid="stStatusWidget"], [data-testid="stSidebar"] { display: none !important; }
 
 /* EMPUJAR EL CONTENIDO PRINCIPAL HACIA ABAJO PARA COMPENSAR HEADER Y TABS FIJOS */
-.block-container { padding: 160px 3rem 5rem !important; max-width: 1300px !important; }
+.block-container { padding: 180px 3rem 5rem !important; max-width: 1300px !important; }
 
 /* Header fijo */
 .hdr { 
@@ -107,7 +107,7 @@ html, body, .stApp,
 /* Tabs / Navegación fija */
 [data-testid="stTabs"] [role="tablist"] { 
     position: fixed;
-    top: 85px; /* Altura donde termina el header */
+    top: 95px; /* Altura donde termina el header */
     left: 0;
     right: 0;
     z-index: 999;
