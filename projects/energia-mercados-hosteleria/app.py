@@ -107,7 +107,7 @@ html, body, .stApp,
 /* Tabs / Navegación fija */
 [data-testid="stTabs"] [role="tablist"] { 
     position: fixed;
-    top: 97px; /* Altura donde termina el header */
+    top: 98px; /* Altura donde termina el header */
     left: 0;
     right: 0;
     z-index: 999;
