@@ -129,7 +129,7 @@ ia-indata-agency/
 │   └── energia-mercados-hosteleria/
 └── .github/workflows/
     ├── energia_mercados.yml
-    ├── hosteleria_daily.yml
+    ├── energia_mercados_hosteleria.yml
     └── backfill_hosteleria.yml        ← conservar para futuros rebackfills
 ```
 
